@@ -1,0 +1,18 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/navHome"
+        android:title="@string/home"
+        android:icon="@drawable/ic_home" />
+    <item
+        android:id="@+id/navSearch"
+        android:title="@string/search"
+        android:icon="@drawable/ic_search" />
+    <item
+        android:id="@+id/navMyMusic"
+        android:title="@string/my_music"
+        android:icon="@drawable/ic_folder" />
+    <item
+        android:id="@+id/navPremium"
+        android:title="@string/premium"
+        android:icon="@drawable/ic_premium" />
+</menu>

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="AppTheme" parent="Theme.MaterialComponents.DayNight">
+        <!-- Customize your theme attributes here -->
+        <item name="colorPrimary">#0B0F20</item>
+        <item name="colorPrimaryDark">#BCBCBC</item>
+        <item name="colorAccent">@color/white</item>
+        <!-- ... other theme attributes ... -->
+    </style>
+
+</resources>

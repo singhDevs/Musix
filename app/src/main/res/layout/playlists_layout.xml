@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:padding="10dp"
+    android:orientation="vertical"
+    android:gravity="start">
+
+    <com.makeramen.roundedimageview.RoundedImageView
+        android:id="@+id/songBanner"
+        android:layout_width="120dp"
+        android:layout_height="120dp"
+        android:src="@drawable/img"
+        android:scaleType="centerCrop"
+        app:riv_border_width="2dp"
+        app:riv_border_color="@color/black"
+        app:riv_corner_radius="10dp"
+        app:riv_mutate_background="true"/>
+
+    <TextView
+        android:id="@+id/title"
+        android:layout_width="110dp"
+        android:layout_height="wrap_content"
+        android:text="El Sueno"
+        android:textSize="15sp"
+        android:fontFamily="@font/inter_bold"
+        android:textColor="@color/white"
+        android:layout_marginStart="5dp"
+        android:layout_marginEnd="5dp"/>
+
+    <TextView
+        android:id="@+id/artist"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Diljit Dosanjh"
+        android:textSize="11sp"
+        android:textColor="#C0C0C0"
+        android:fontFamily="@font/inter_semibold"
+        android:layout_marginStart="5dp"
+        android:layout_marginEnd="5dp"/>
+
+</LinearLayout>
