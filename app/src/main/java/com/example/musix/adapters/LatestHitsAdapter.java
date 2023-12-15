@@ -34,7 +34,7 @@ public class LatestHitsAdapter extends RecyclerView.Adapter<LatestHitsAdapter.Vi
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        holder.banner.setImageResource(latestHitsList.get(position).getBanner());
+//        holder.banner.setImageResource(latestHitsList.get(position).getBanner());
         holder.title.setText(latestHitsList.get(position).getTitle());
         holder.artist.setText(latestHitsList.get(position).getArtist());
 
@@ -66,5 +66,10 @@ public class LatestHitsAdapter extends RecyclerView.Adapter<LatestHitsAdapter.Vi
 
     public interface OnSongClickListener{
         void onSongClick(Song song);
+    }
+
+    public void updateData(List<Song> newList){
+        this.latestHitsList = newList;
+        notifyDataSetChanged();
     }
 }

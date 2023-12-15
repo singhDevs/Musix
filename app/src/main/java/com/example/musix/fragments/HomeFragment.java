@@ -1,18 +1,16 @@
 package com.example.musix.fragments;
 
-import static com.example.musix.handlers.FirebaseHandler.uploadBanner;
-import static com.example.musix.handlers.FirebaseHandler.uploadSong;
-import static com.example.musix.handlers.FirebaseHandler.uploadSongData;
-
 import android.content.Intent;
-import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 
+import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -24,10 +22,12 @@ import com.example.musix.adapters.LatestHitsAdapter;
 import com.example.musix.adapters.PlaylistsAdapter;
 import com.example.musix.models.Playlist;
 import com.example.musix.models.Song;
-import com.google.firebase.storage.FirebaseStorage;
-import com.google.firebase.storage.StorageReference;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -38,6 +38,7 @@ public class HomeFragment extends Fragment {
     List<Playlist> playlists = new ArrayList<>();
     List<Playlist> songsByLanguageList = new ArrayList<>();
     Button uploadSongs;
+    LatestHitsAdapter latestHitsAdapter;
 
     public HomeFragment() {
         // Required empty public constructor
@@ -47,48 +48,22 @@ public class HomeFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_home, container, false);
 
-        //Latest Hits Recycler  
-//        latestHitsList.add(new Song("1", R.drawable.img, "El Sueno", "Diljit Dosanjh"));
+        //Latest Hits Recycler
         latestHitsRecycler = view.findViewById(R.id.recyclerLatestHits);
         LinearLayoutManager layoutManager = new LinearLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, false);
         latestHitsRecycler.setLayoutManager(layoutManager);
-
-//        uploadSongs = view.findViewById(R.id.uploadSongs);
-//        uploadSongs.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View view) {
-//
-//                int resId = getResources().getIdentifier("heraudio", "raw", getContext().getPackageName());
-//                int resId2 = getResources().getIdentifier("herbanner", "raw", getContext().getPackageName());
-//
-//                InputStream inputStream1 = getResources().openRawResource(resId);
-//                InputStream inputStream2 = getResources().openRawResource(resId2);
-//
-//                String songURL = uploadSong(inputStream1, getContext()).toString();
-//                String bannerURL = uploadBanner(inputStream2, getContext(), songURL).toString();
-//                Song song = new Song();
-//                song.setId(songURL);
-//                song.setTitle("Her");
-//                song.setArtist("Shubh");
-//                song.setDurationInSeconds(154);
-//                song.setReleaseYear(2022);
-//                song.setBanner(bannerURL);
-//                song.setAlbum("NA");
-//
-//                uploadSongData(song, getContext());
-//            }
-//        });
-
         LatestHitsAdapter.OnSongClickListener onSongClickListener = new LatestHitsAdapter.OnSongClickListener() {
             @Override
             public void onSongClick(Song song) {
                 Intent intent = new Intent(getContext(), MusicPlayer.class);
                 intent.putExtra("song", song);
+                intent.putExtra("songUrl", song.getId());
                 startActivity(intent);
             }
         };
-        LatestHitsAdapter adapter = new LatestHitsAdapter(latestHitsList, onSongClickListener);
-        latestHitsRecycler.setAdapter(adapter);
+        latestHitsAdapter = new LatestHitsAdapter(new ArrayList<>(), onSongClickListener);
+        latestHitsRecycler.setAdapter(latestHitsAdapter);
+        new GetLatestHits().execute();
 
 
 
@@ -116,4 +91,64 @@ public class HomeFragment extends Fragment {
 
         return view;
     }
+
+
+//    public CompletableFuture<List<Song>> getLatestHits(){
+//        Log.d("TAG", "entered Completable Future");
+//        CompletableFuture<List<Song>> future = new CompletableFuture<>();
+//        try{
+//            List<Song> songList = fetchLatestHits();
+//            future.complete(songList);
+//        }
+//        catch (Exception e){
+//            future.completeExceptionally(e);
+//        }
+//
+//        return future;
+//    }
+
+    private class GetLatestHits extends AsyncTask<Void, Void, List<Song>> {
+
+        @Override
+        protected List<Song> doInBackground(Void... voids) {
+            List<Song> songs = fetchLatestHits();
+            Log.d("TAG", "songs size: " + songs.size());
+            return songs;
+        }
+
+        @Override
+        protected void onPostExecute(List<Song> songs) {
+            super.onPostExecute(songs);
+            latestHitsAdapter.updateData(songs);
+//            latestHitsList = songs;
+//            Log.d("TAG", "size: " + latestHitsList.size());
+        }
+    }
+
+    public List<Song> fetchLatestHits(){
+        DatabaseReference reference = FirebaseDatabase.getInstance().getReference().child("songs");
+        List<Song> songsList = new ArrayList<>();
+
+        reference.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                for(DataSnapshot snapshot1 : snapshot.getChildren()){
+                    Song song = snapshot1.getValue(Song.class);
+                    songsList.add(song);
+                    Log.d("TAG", "\nAdded Song: " + song.getTitle());
+                }
+                latestHitsList.clear();
+                latestHitsList.addAll(songsList);
+                latestHitsAdapter.notifyDataSetChanged();
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                Log.d("TAG", "Songs not loaded into the List");
+            }
+        });
+        Log.d("TAG", "songsList size: " + songsList.size());
+        return songsList;
+    }
+
 }

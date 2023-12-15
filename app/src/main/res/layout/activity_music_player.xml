@@ -65,6 +65,7 @@
             android:padding="10dp">
 
             <com.makeramen.roundedimageview.RoundedImageView
+                android:id="@+id/songBanner"
                 android:layout_width="350dp"
                 android:layout_height="350dp"
                 app:riv_corner_radius="15dp"
