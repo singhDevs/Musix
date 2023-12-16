@@ -15,19 +15,25 @@ import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
+import com.bumptech.glide.Glide;
 import com.example.musix.R;
 import com.example.musix.models.Song;
 import com.google.android.exoplayer2.MediaItem;
 import com.google.android.exoplayer2.SimpleExoPlayer;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
 import com.makeramen.roundedimageview.RoundedImageView;
+
+import java.util.List;
 
 public class MusicPlayer extends AppCompatActivity {
     private SimpleExoPlayer player;
     private Song song;
+    private List<Song> songList;
+    private int songPosition;
     private RoundedImageView songBanner;
     TextView songTitle, songArtist, currDuration, songDuration;
     ImageView playBtn, nextBtn, prevBtn, backBtn;
-    MediaPlayer mediaPlayer;
     SeekBar seekbar;
     Handler handler;
     int duration;
@@ -44,6 +50,11 @@ public class MusicPlayer extends AppCompatActivity {
 
         String songUrl = intent.getStringExtra("songUrl");
         Log.d("TAG", "songURL: " + songUrl);
+
+        setUpUI(song);
+
+        setBanner(song.getBanner(), songBanner);
+
         if(songUrl != null && !songUrl.isEmpty()){
             Log.d("TAG", "set up done, now calling function streamAudio...");
             streamAudioFromFirebase(songUrl);
@@ -52,6 +63,8 @@ public class MusicPlayer extends AppCompatActivity {
             Log.d("TAG", "Error fetching Song URL in onStart");
         }
     }
+
+
 
     @Override
     protected void onStop() {
@@ -82,13 +95,9 @@ public class MusicPlayer extends AppCompatActivity {
         handler = new Handler();
 
         Intent intent = getIntent();
-        song = intent.getParcelableExtra("song");
-        duration = song.getDurationInSeconds();
-        songDuration.setText(formatTime(duration));
-        seekbar.setMax(duration);
-
-        songTitle.setText(song.getTitle());
-        songArtist.setText(song.getArtist());
+        songList = (List<Song>) intent.getSerializableExtra("songList");
+        if(songList == null) Log.d("TAG", "before, songList is null");
+        songPosition = intent.getIntExtra("songPosition", 0);
 
         backBtn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -103,6 +112,20 @@ public class MusicPlayer extends AppCompatActivity {
                 Log.d("TAG", "Clicked Play Button");
                 if(musicStatus == PAUSED_MUSIC) playMusic();
                 else if(musicStatus == PLAYING_MUSIC) pauseMusic();
+            }
+        });
+
+        nextBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                playNext();
+            }
+        });
+
+        prevBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                playPrev();
             }
         });
 
@@ -126,7 +149,7 @@ public class MusicPlayer extends AppCompatActivity {
             @Override
             public void onPlaybackStateChanged(int state) {
                 if (state == SimpleExoPlayer.STATE_ENDED) {
-                    resetPlayer();
+                    playNext(); //TODO: implement Repeat or not
                 }
             }
         });
@@ -176,6 +199,45 @@ public class MusicPlayer extends AppCompatActivity {
         }
     }
 
+    public void playNext(){
+        if(songList != null){
+            if(songPosition < songList.size() - 1){
+                resetPlayer();
+                streamAudioFromFirebase(songList.get(++songPosition).getId());
+                setUpUI(songList.get(songPosition));
+            }
+            else{
+                resetPlayer();
+                streamAudioFromFirebase(songList.get(0).getId());
+                setUpUI(songList.get(0));
+                songPosition = 0;
+            }
+        }
+        else{
+            Log.d("TAG", "songList is null");
+        }
+    }
+
+    public void playPrev(){
+        if(songList != null){
+            if(player.getCurrentPosition() / 1000 <= 2){
+                if(songPosition == 0) {
+                    resetPlayer();
+                    playMusic();
+                }
+                else{
+                    resetPlayer();
+                    streamAudioFromFirebase(songList.get(--songPosition).getId());
+                    setUpUI(songList.get(songPosition));
+                }
+            }
+            else{
+                resetPlayer();
+                playMusic();
+            }
+        }
+    }
+
     public String formatTime(int seconds) {
         int minutes = seconds / 60;
         int remainingSeconds = seconds % 60;
@@ -195,5 +257,20 @@ public class MusicPlayer extends AppCompatActivity {
         player.prepare();
         player.play();
         playBtn.setImageResource(R.drawable.ic_pause_filled);
+    }
+
+    private void setBanner(String bannerUrl, RoundedImageView roundedImageView){
+        Glide.with(this)
+                .load(bannerUrl)
+                .centerCrop()
+                .into(roundedImageView);
+    }
+
+    private void setUpUI(Song song) {
+        songTitle.setText(song.getTitle());
+        songArtist.setText(song.getArtist());
+        songDuration.setText(formatTime(song.getDurationInSeconds()));
+        seekbar.setMax(song.getDurationInSeconds());
+        setBanner(song.getBanner(), songBanner);
     }
 }

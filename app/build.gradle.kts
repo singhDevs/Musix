@@ -44,4 +44,5 @@ dependencies {
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
     implementation("com.makeramen:roundedimageview:2.3.0")
     implementation("com.google.android.exoplayer:exoplayer:2.15.0")
+    implementation("com.github.bumptech.glide:glide:4.14.2")
 }

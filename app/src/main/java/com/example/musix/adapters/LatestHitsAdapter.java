@@ -1,6 +1,5 @@
 package com.example.musix.adapters;
 
-import android.text.Layout;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -9,6 +8,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.bumptech.glide.Glide;
 import com.example.musix.R;
 import com.example.musix.models.Song;
 import com.makeramen.roundedimageview.RoundedImageView;
@@ -34,7 +34,9 @@ public class LatestHitsAdapter extends RecyclerView.Adapter<LatestHitsAdapter.Vi
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-//        holder.banner.setImageResource(latestHitsList.get(position).getBanner());
+        Glide.with(holder.itemView.getContext())
+                .load(latestHitsList.get(position).getBanner())
+                .into(holder.banner);
         holder.title.setText(latestHitsList.get(position).getTitle());
         holder.artist.setText(latestHitsList.get(position).getArtist());
 
@@ -42,7 +44,7 @@ public class LatestHitsAdapter extends RecyclerView.Adapter<LatestHitsAdapter.Vi
             @Override
             public void onClick(View view) {
                 if(onSongClickListener != null){
-                    onSongClickListener.onSongClick(latestHitsList.get(position));
+                    onSongClickListener.onSongClick(latestHitsList.get(position), position);
                 }
             }
         });
@@ -52,7 +54,6 @@ public class LatestHitsAdapter extends RecyclerView.Adapter<LatestHitsAdapter.Vi
     public int getItemCount() {
         return latestHitsList.size();
     }
-
     public static class ViewHolder extends RecyclerView.ViewHolder{
         TextView title, artist;
         RoundedImageView banner;
@@ -65,7 +66,7 @@ public class LatestHitsAdapter extends RecyclerView.Adapter<LatestHitsAdapter.Vi
     }
 
     public interface OnSongClickListener{
-        void onSongClick(Song song);
+        void onSongClick(Song song, int position);
     }
 
     public void updateData(List<Song> newList){

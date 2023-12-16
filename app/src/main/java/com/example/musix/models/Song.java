@@ -3,7 +3,9 @@ package com.example.musix.models;
 import android.os.Parcel;
 import android.os.Parcelable;
 
-public class Song implements Parcelable {
+import java.io.Serializable;
+
+public class Song implements Parcelable, Serializable {
     private String id;
     private String Banner;
     private String title;

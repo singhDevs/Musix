@@ -10,11 +10,12 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.os.Parcelable;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
+import android.widget.TextView;
 
 import com.example.musix.R;
 import com.example.musix.activities.MusicPlayer;
@@ -28,8 +29,12 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import java.io.Serializable;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
+import java.util.Locale;
 
 
 public class HomeFragment extends Fragment {
@@ -37,8 +42,8 @@ public class HomeFragment extends Fragment {
     List<Song> latestHitsList = new ArrayList<>();
     List<Playlist> playlists = new ArrayList<>();
     List<Playlist> songsByLanguageList = new ArrayList<>();
-    Button uploadSongs;
     LatestHitsAdapter latestHitsAdapter;
+    TextView greetingTxt;
 
     public HomeFragment() {
         // Required empty public constructor
@@ -48,23 +53,27 @@ public class HomeFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_home, container, false);
 
+        String greeting = getGreeting();
+        greetingTxt = view.findViewById(R.id.greetingTxt);
+        greetingTxt.setText(greeting);
+
+
         //Latest Hits Recycler
         latestHitsRecycler = view.findViewById(R.id.recyclerLatestHits);
         LinearLayoutManager layoutManager = new LinearLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, false);
         latestHitsRecycler.setLayoutManager(layoutManager);
-        LatestHitsAdapter.OnSongClickListener onSongClickListener = new LatestHitsAdapter.OnSongClickListener() {
-            @Override
-            public void onSongClick(Song song) {
-                Intent intent = new Intent(getContext(), MusicPlayer.class);
-                intent.putExtra("song", song);
-                intent.putExtra("songUrl", song.getId());
-                startActivity(intent);
-            }
+        LatestHitsAdapter.OnSongClickListener onSongClickListener = (song, position) -> {
+            Intent intent = new Intent(getContext(), MusicPlayer.class);
+            intent.putExtra("song", (Parcelable) song);
+            intent.putExtra("songUrl", song.getId());
+            intent.putExtra("songList", (Serializable) latestHitsList);
+            Log.d("TAG", "SongList size: " + (latestHitsList != null ? latestHitsList.size() : 0));
+            intent.putExtra("songPosition", position);
+            startActivity(intent);
         };
         latestHitsAdapter = new LatestHitsAdapter(new ArrayList<>(), onSongClickListener);
         latestHitsRecycler.setAdapter(latestHitsAdapter);
         new GetLatestHits().execute();
-
 
 
 
@@ -92,23 +101,22 @@ public class HomeFragment extends Fragment {
         return view;
     }
 
+    private String getGreeting() {
+        int hour = Integer.parseInt(new SimpleDateFormat("HH", Locale.getDefault())
+                .format(Calendar.getInstance().getTime()));
 
-//    public CompletableFuture<List<Song>> getLatestHits(){
-//        Log.d("TAG", "entered Completable Future");
-//        CompletableFuture<List<Song>> future = new CompletableFuture<>();
-//        try{
-//            List<Song> songList = fetchLatestHits();
-//            future.complete(songList);
-//        }
-//        catch (Exception e){
-//            future.completeExceptionally(e);
-//        }
-//
-//        return future;
-//    }
+        if (hour >= 5 && hour < 12) {
+            return "Good morning!";
+        }
+        else if (hour >= 12 && hour < 18) {
+            return "Good afternoon!";
+        }
+        else {
+            return "Good evening!";
+        }
+    }
 
     private class GetLatestHits extends AsyncTask<Void, Void, List<Song>> {
-
         @Override
         protected List<Song> doInBackground(Void... voids) {
             List<Song> songs = fetchLatestHits();
@@ -120,8 +128,6 @@ public class HomeFragment extends Fragment {
         protected void onPostExecute(List<Song> songs) {
             super.onPostExecute(songs);
             latestHitsAdapter.updateData(songs);
-//            latestHitsList = songs;
-//            Log.d("TAG", "size: " + latestHitsList.size());
         }
     }
 
@@ -150,5 +156,4 @@ public class HomeFragment extends Fragment {
         Log.d("TAG", "songsList size: " + songsList.size());
         return songsList;
     }
-
 }
