@@ -33,12 +33,19 @@ public class MusicPlayer extends AppCompatActivity {
     private int songPosition;
     private RoundedImageView songBanner;
     TextView songTitle, songArtist, currDuration, songDuration;
-    ImageView playBtn, nextBtn, prevBtn, backBtn;
+    ImageView playBtn, nextBtn, prevBtn, backBtn, likeBtn, repeatBtn;
     SeekBar seekbar;
     Handler handler;
     int duration;
     public final int PLAYING_MUSIC = 1;
     public final int PAUSED_MUSIC = 2;
+    public final int NOT_LIKED = 0;
+    public final int LIKED = 1;
+    public final int NOT_REPEATED = 0;
+    public final int REPEAT = 1;
+    public final int REPEAT_ONE = 2;
+    public int likeState;
+    public int repeatState;
     public int musicStatus;
 
     @Override
@@ -84,12 +91,16 @@ public class MusicPlayer extends AppCompatActivity {
         currDuration = findViewById(R.id.currDuration);
         songDuration = findViewById(R.id.songDuration);
         musicStatus = 2;
+        likeState = NOT_LIKED; //TODO: should not be hardcoded, store it in DB or something.
+        repeatState = NOT_REPEATED;
 
         playBtn = findViewById(R.id.playBtn);
         nextBtn = findViewById(R.id.nextBtn);
         prevBtn = findViewById(R.id.prevBtn);
         backBtn = findViewById(R.id.backBtn);
         seekbar = findViewById(R.id.seekBar);
+        likeBtn = findViewById(R.id.likeBtn);
+        repeatBtn = findViewById(R.id.repeatBtn);
         songBanner = findViewById(R.id.songBanner);
 
         handler = new Handler();
@@ -109,7 +120,6 @@ public class MusicPlayer extends AppCompatActivity {
         playBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Log.d("TAG", "Clicked Play Button");
                 if(musicStatus == PAUSED_MUSIC) playMusic();
                 else if(musicStatus == PLAYING_MUSIC) pauseMusic();
             }
@@ -126,6 +136,40 @@ public class MusicPlayer extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 playPrev();
+            }
+        });
+
+        likeBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+                //TODO: here implement pushing and removing this like song to the DB
+                if(likeState == NOT_LIKED){
+                    likeBtn.setImageResource(R.drawable.heart_filled);
+                    likeState = LIKED;
+                }
+                else{
+                    likeBtn.setImageResource(R.drawable.heart_outline);
+                    likeState = NOT_LIKED;
+                }
+            }
+        });
+
+        repeatBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if(repeatState == NOT_REPEATED){
+                    repeatBtn.setImageResource(R.drawable.repeat);
+                    repeatState = REPEAT;
+                }
+                else if(repeatState == REPEAT){
+                    repeatBtn.setImageResource(R.drawable.repeat_one);
+                    repeatState = REPEAT_ONE;
+                }
+                else{
+                    repeatBtn.setImageResource(R.drawable.no_repeat);
+                    repeatState = NOT_REPEATED;
+                }
             }
         });
 
@@ -201,16 +245,32 @@ public class MusicPlayer extends AppCompatActivity {
 
     public void playNext(){
         if(songList != null){
-            if(songPosition < songList.size() - 1){
+            if(repeatState == REPEAT){
+                if(songPosition < songList.size() - 1){
+                    resetPlayer();
+                    streamAudioFromFirebase(songList.get(++songPosition).getId());
+                    setUpUI(songList.get(songPosition));
+                }
+                else{
+                    resetPlayer();
+                    streamAudioFromFirebase(songList.get(0).getId());
+                    setUpUI(songList.get(0));
+                    songPosition = 0;
+                }
+            }
+            else if(repeatState == REPEAT_ONE){
                 resetPlayer();
-                streamAudioFromFirebase(songList.get(++songPosition).getId());
-                setUpUI(songList.get(songPosition));
+                playMusic();
             }
             else{
-                resetPlayer();
-                streamAudioFromFirebase(songList.get(0).getId());
-                setUpUI(songList.get(0));
-                songPosition = 0;
+                if(songPosition < songList.size() - 1){
+                    resetPlayer();
+                    streamAudioFromFirebase(songList.get(++songPosition).getId());
+                    setUpUI(songList.get(songPosition));
+                }
+                else{
+                    resetPlayer();
+                }
             }
         }
         else{
