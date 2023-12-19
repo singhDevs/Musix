@@ -29,13 +29,23 @@
                     android:layout_marginStart="10dp"
                     android:layout_weight="1"
                     android:fontFamily="@font/inter_black"
-                    android:text="@string/good_evening"
+                    android:text="Good Evening, user"
                     android:textColor="@color/white"
-                    android:textSize="28sp" />
+                    android:textSize="25sp" />
 
-                <include
-                    android:id="@+id/account_button"
-                    layout="@layout/account_button_layout"/>
+                <Button
+                    android:id="@+id/logoutBtn"
+                    android:layout_width="wrap_content"
+                    android:layout_height="35dp"
+                    android:includeFontPadding="false"
+                    android:textSize="11sp"
+                    android:padding="0dp"
+                    android:text="@string/logout"/>
+
+                <ImageView
+                    android:id="@+id/photo"
+                    android:layout_width="45dp"
+                    android:layout_height="45dp"/>
             </LinearLayout>
 
             <LinearLayout
@@ -114,3 +124,7 @@
 
 
 </FrameLayout>
+
+<!--<include-->
+<!--android:id="@+id/account_button"-->
+<!--layout="@layout/account_button_layout"/>-->

@@ -10,4 +10,13 @@
     <string name="good_evening">Good Evening</string>
     <string name="latest_hits">Latest Hits</string>
     <string name="playlists">Playlists</string>
+    <string name="web_client_id">885105135618-or4k3o6uvqrhmri6jit3l8gepi7kc6d0.apps.googleusercontent.com</string>
+    <string name="login">Login</string>
+    <string name="sign_in_with_google">Sign in with Google</string>
+    <string name="or_with_lines">───────────── OR ─────────────</string>
+    <string name="don_t_have_an_account_sign_up">Don\'t have an account? Sign up</string>
+    <string name="password">Password</string>
+    <string name="email">Email</string>
+    <string name="step_into_the_rhythm">Step into the Rhythm 🎶</string>
+    <string name="logout">Logout</string>
 </resources>

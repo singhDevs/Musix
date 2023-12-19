@@ -1,6 +1,7 @@
 {
   "project_info": {
     "project_number": "885105135618",
+    "firebase_url": "https://musix-a6206-default-rtdb.firebaseio.com",
     "project_id": "musix-a6206",
     "storage_bucket": "musix-a6206.appspot.com"
   },
@@ -12,7 +13,12 @@
           "package_name": "com.example.musix"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "885105135618-or4k3o6uvqrhmri6jit3l8gepi7kc6d0.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyBMsmsx7BFQqLAPXMdELF2PyABr9xdgnIY"
@@ -20,7 +26,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "885105135618-or4k3o6uvqrhmri6jit3l8gepi7kc6d0.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }
