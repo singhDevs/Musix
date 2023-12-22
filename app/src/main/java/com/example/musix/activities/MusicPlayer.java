@@ -2,7 +2,9 @@ package com.example.musix.activities;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.Context;
 import android.content.Intent;
+import android.media.AudioManager;
 import android.media.Image;
 import android.media.MediaPlayer;
 import android.os.Bundle;
@@ -28,13 +30,14 @@ import java.util.List;
 
 public class MusicPlayer extends AppCompatActivity {
     private SimpleExoPlayer player;
+    private AudioManager audioManager;
     private Song song;
     private List<Song> songList;
     private int songPosition;
     private RoundedImageView songBanner;
     TextView songTitle, songArtist, currDuration, songDuration;
-    ImageView playBtn, nextBtn, prevBtn, backBtn, likeBtn, repeatBtn;
-    SeekBar seekbar;
+    ImageView playBtn, nextBtn, prevBtn, backBtn, likeBtn, repeatBtn, volumeIcon;
+    SeekBar seekbar, volumeSeekbar;
     Handler handler;
     int duration;
     public final int PLAYING_MUSIC = 1;
@@ -71,12 +74,12 @@ public class MusicPlayer extends AppCompatActivity {
         }
     }
 
-
-
     @Override
     protected void onStop() {
         super.onStop();
         player.release();
+        audioManager.abandonAudioFocus(null);
+
     }
 
     @Override
@@ -99,6 +102,8 @@ public class MusicPlayer extends AppCompatActivity {
         prevBtn = findViewById(R.id.prevBtn);
         backBtn = findViewById(R.id.backBtn);
         seekbar = findViewById(R.id.seekBar);
+        volumeSeekbar = findViewById(R.id.volumeSeekbar);
+        volumeIcon = findViewById(R.id.volumeIcon);
         likeBtn = findViewById(R.id.likeBtn);
         repeatBtn = findViewById(R.id.repeatBtn);
         songBanner = findViewById(R.id.songBanner);
@@ -188,6 +193,54 @@ public class MusicPlayer extends AppCompatActivity {
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {}
         });
+
+        audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+        int currVolume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
+        int maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
+        volumeSeekbar.setMax(maxVolume);
+        Log.d("TAG", "Max Volume: " + maxVolume);
+        volumeSeekbar.setProgress(currVolume);
+
+        int audioFocus = audioManager.requestAudioFocus(
+                null,
+                AudioManager.STREAM_MUSIC,
+                AudioManager.AUDIOFOCUS_GAIN
+        );
+
+        if(audioFocus == AudioManager.AUDIOFOCUS_REQUEST_GRANTED){
+            volumeSeekbar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+                @Override
+                public void onProgressChanged(SeekBar seekBar, int progress, boolean b) {
+                    int percentage = (int) (((float)progress / maxVolume) * 100);
+                    Log.d("TAG", "Volume %: " + percentage);
+                    Log.d("TAG", "Volume Progress: " + progress);
+                    if(percentage < 40 && percentage > 0){
+                        volumeIcon.setImageResource(R.drawable.ic_low_volume);
+                    }
+                    else if(percentage == 0){
+                        volumeIcon.setImageResource(R.drawable.ic_mute);
+                    }
+                    else{
+                        volumeIcon.setImageResource(R.drawable.ic_volume);
+                    }
+                    audioManager.setStreamVolume(
+                            AudioManager.STREAM_MUSIC,
+                            progress,
+                            AudioManager.FLAG_PLAY_SOUND
+                    );
+                }
+
+                @Override
+                public void onStartTrackingTouch(SeekBar seekBar) {
+
+                }
+
+                @Override
+                public void onStopTrackingTouch(SeekBar seekBar) {
+
+                }
+            });
+        }
 
         player.addListener(new SimpleExoPlayer.EventListener() {
             @Override
