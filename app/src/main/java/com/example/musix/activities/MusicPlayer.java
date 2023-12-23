@@ -36,7 +36,7 @@ public class MusicPlayer extends AppCompatActivity {
     private int songPosition;
     private RoundedImageView songBanner;
     TextView songTitle, songArtist, currDuration, songDuration;
-    ImageView playBtn, nextBtn, prevBtn, backBtn, likeBtn, repeatBtn, volumeIcon;
+    ImageView playBtn, nextBtn, prevBtn, backBtn, likeBtn, repeatBtn, volumeIcon, shuffleBtn;
     SeekBar seekbar, volumeSeekbar;
     Handler handler;
     int duration;
@@ -47,9 +47,12 @@ public class MusicPlayer extends AppCompatActivity {
     public final int NOT_REPEATED = 0;
     public final int REPEAT = 1;
     public final int REPEAT_ONE = 2;
+    private final int NO_SHUFFLE = 0;
+    private final int SHUFFLE = 1;
     public int likeState;
     public int repeatState;
     public int musicStatus;
+    private int shuffleStatus;
 
     @Override
     protected void onStart() {
@@ -93,7 +96,8 @@ public class MusicPlayer extends AppCompatActivity {
         songArtist = findViewById(R.id.songArtist);
         currDuration = findViewById(R.id.currDuration);
         songDuration = findViewById(R.id.songDuration);
-        musicStatus = 2;
+        musicStatus = PLAYING_MUSIC;
+        shuffleStatus = NO_SHUFFLE;
         likeState = NOT_LIKED; //TODO: should not be hardcoded, store it in DB or something.
         repeatState = NOT_REPEATED;
 
@@ -105,6 +109,7 @@ public class MusicPlayer extends AppCompatActivity {
         volumeSeekbar = findViewById(R.id.volumeSeekbar);
         volumeIcon = findViewById(R.id.volumeIcon);
         likeBtn = findViewById(R.id.likeBtn);
+        shuffleBtn = findViewById(R.id.shuffleBtn);
         repeatBtn = findViewById(R.id.repeatBtn);
         songBanner = findViewById(R.id.songBanner);
 
@@ -156,6 +161,20 @@ public class MusicPlayer extends AppCompatActivity {
                 else{
                     likeBtn.setImageResource(R.drawable.heart_outline);
                     likeState = NOT_LIKED;
+                }
+            }
+        });
+
+        shuffleBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if(shuffleStatus == NO_SHUFFLE){
+                    shuffleStatus = SHUFFLE;
+                    shuffleBtn.setImageResource(R.drawable.shuffle);
+                }
+                else{
+                    shuffleStatus = NO_SHUFFLE;
+                    shuffleBtn.setImageResource(R.drawable.no_shuffle);
                 }
             }
         });
@@ -282,7 +301,8 @@ public class MusicPlayer extends AppCompatActivity {
         if (player != null) {
             playBtn.setImageResource(R.drawable.ic_play_filled);
             musicStatus = PAUSED_MUSIC;
-            player.setPlayWhenReady(false); // Pause
+            player.pause();
+//            player.setPlayWhenReady(false); // Pause
             Log.d("TAG", "after player.setPlayWhenReady(false)");
         }
     }
@@ -299,30 +319,56 @@ public class MusicPlayer extends AppCompatActivity {
     public void playNext(){
         if(songList != null){
             if(repeatState == REPEAT){
-                if(songPosition < songList.size() - 1){
+                if(shuffleStatus == SHUFFLE){
                     resetPlayer();
-                    streamAudioFromFirebase(songList.get(++songPosition).getId());
+                    int randomPosition = songPosition;
+                    while(songPosition == randomPosition){
+                        randomPosition = (int) (Math.random() * (songList.size()) + 0);
+                    }
+                    songPosition = randomPosition;
+                    streamAudioFromFirebase(songList.get(songPosition).getId());
                     setUpUI(songList.get(songPosition));
+
                 }
                 else{
-                    resetPlayer();
-                    streamAudioFromFirebase(songList.get(0).getId());
-                    setUpUI(songList.get(0));
-                    songPosition = 0;
+                    if(songPosition < songList.size() - 1){
+                        resetPlayer();
+                        streamAudioFromFirebase(songList.get(++songPosition).getId());
+                        setUpUI(songList.get(songPosition));
+                    }
+                    else{
+                        resetPlayer();
+                        streamAudioFromFirebase(songList.get(0).getId());
+                        setUpUI(songList.get(0));
+                        songPosition = 0;
+                    }
                 }
+
             }
             else if(repeatState == REPEAT_ONE){
                 resetPlayer();
                 playMusic();
             }
             else{
-                if(songPosition < songList.size() - 1){
+                if(shuffleStatus == SHUFFLE){
                     resetPlayer();
-                    streamAudioFromFirebase(songList.get(++songPosition).getId());
+                    int randomPosition = songPosition;
+                    while(songPosition == randomPosition){
+                        randomPosition = (int) (Math.random() * (songList.size()) + 0);
+                    }
+                    songPosition = randomPosition;
+                    streamAudioFromFirebase(songList.get(songPosition).getId());
                     setUpUI(songList.get(songPosition));
                 }
                 else{
-                    resetPlayer();
+                    if(songPosition < songList.size() - 1){
+                        resetPlayer();
+                        streamAudioFromFirebase(songList.get(++songPosition).getId());
+                        setUpUI(songList.get(songPosition));
+                    }
+                    else{
+                        resetPlayer();
+                    }
                 }
             }
         }

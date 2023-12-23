@@ -102,11 +102,19 @@
                         android:includeFontPadding="false"
                         android:fontFamily="@font/inter_medium"
                         android:textSize="15sp"/>
+
                 </LinearLayout>
                 <View
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"/>
+
+                <ImageView
+                    android:id="@+id/likeBtn"
+                    android:layout_width="28dp"
+                    android:layout_height="28dp"
+                    android:src="@drawable/heart_outline"
+                    android:contentDescription="@string/app_name" />
 
             </LinearLayout>
 
@@ -157,12 +165,12 @@
                 android:layout_marginTop="10dp">
 
                 <ImageView
-                    android:id="@+id/likeBtn"
-                    android:layout_width="28dp"
-                    android:layout_height="28dp"
+                    android:id="@+id/shuffleBtn"
+                    android:layout_width="35dp"
+                    android:layout_height="35dp"
                     android:layout_marginEnd="15dp"
-                    android:src="@drawable/heart_outline"
-                    android:contentDescription="@string/app_name" />
+                    android:src="@drawable/no_shuffle"
+                    android:contentDescription="@string/app_name"/>
 
                 <ImageView
                     android:id="@+id/prevBtn"
