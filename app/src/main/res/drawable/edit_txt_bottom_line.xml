@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- bottom_edge_rectangle.xml -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:top="-1dp" android:left="-1dp" android:right="-1dp">
+        <shape android:shape="rectangle">
+            <solid android:color="@android:color/transparent" /> <!-- Set the color to white or any color you prefer -->
+        </shape>
+    </item>
+    <item android:top="-2dp" android:left="-2dp" android:right="-2dp">
+        <shape android:shape="rectangle">
+            <solid android:color="@android:color/transparent" />
+            <stroke android:color="@color/white" android:width="2dp" /> <!-- Set the width and color of the bottom edge -->
+        </shape>
+    </item>
+</layer-list>

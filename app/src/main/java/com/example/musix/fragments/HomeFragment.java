@@ -6,7 +6,6 @@ import android.os.Bundle;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
-import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -19,14 +18,16 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.example.musix.R;
 import com.example.musix.activities.Login;
-import com.example.musix.activities.MainActivity;
 import com.example.musix.activities.MusicPlayer;
+import com.example.musix.activities.PlaylistActivity;
 import com.example.musix.adapters.LatestHitsAdapter;
 import com.example.musix.adapters.PlaylistsAdapter;
+import com.example.musix.callbacks.PlaylistCallback;
 import com.example.musix.handlers.GoogleSignInHelper;
 import com.example.musix.models.Playlist;
 import com.example.musix.models.Song;
@@ -34,7 +35,6 @@ import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -47,8 +47,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Locale;
-import java.util.Objects;
-
+import java.util.Map;
 
 public class HomeFragment extends Fragment {
     RecyclerView latestHitsRecycler, playlistsRecycler, languageRecycler;
@@ -56,6 +55,7 @@ public class HomeFragment extends Fragment {
     List<Playlist> playlists = new ArrayList<>();
     List<Playlist> songsByLanguageList = new ArrayList<>();
     LatestHitsAdapter latestHitsAdapter;
+    PlaylistsAdapter playlistsAdapter;
     TextView greetingTxt;
     GoogleSignInOptions gso;
     private Button logoutBtn;
@@ -114,6 +114,8 @@ public class HomeFragment extends Fragment {
             intent.putExtra("song", (Parcelable) song);
             intent.putExtra("songUrl", song.getId());
             intent.putExtra("songList", (Serializable) latestHitsList);
+            intent.putExtra("playlistName", "Latest Hits");
+            intent.putExtra("currentUser", FirebaseAuth.getInstance().getCurrentUser().getUid());
             Log.d("TAG", "SongList size: " + (latestHitsList != null ? latestHitsList.size() : 0));
             intent.putExtra("songPosition", position);
             startActivity(intent);
@@ -125,25 +127,40 @@ public class HomeFragment extends Fragment {
 
 
         //Playlist Recycler
-        playlists.add(new Playlist(R.drawable.img, "Best of Diljit Dosanjh's", "Musix", 9000));
+//        playlists.add(new Playlist(R.drawable.img, "Best of Diljit Dosanjh's", "Musix", 9000, new HashMap<>()));
         playlistsRecycler = view.findViewById(R.id.recyclerPlaylists);
 
         LinearLayoutManager layoutManager1 = new LinearLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, false);
         playlistsRecycler.setLayoutManager(layoutManager1);
-
-        PlaylistsAdapter playlistsAdapter = new PlaylistsAdapter(playlists);
+        PlaylistsAdapter.OnPlaylistClicked onPlaylistClicked = playlist -> {
+            Intent intent = new Intent(getContext(), PlaylistActivity.class);
+            intent.putExtra("playlist", (Parcelable) playlist);
+            if(playlist == null) Log.d("TAG", "in Home Fragment, playlist is null!");
+            else {
+                Log.d("TAG", "in Home Fragment, playlist is NOT null! size: " + playlist.getSongs().size());
+                for(Map.Entry<String, Boolean> entry : playlist.getSongs().entrySet()){
+                    Log.d("TAG", "key: " + entry.getKey() + "\t\tValue: " + entry.getValue());
+                }
+            }
+            startActivity(intent);
+        };
+        playlistsAdapter = new PlaylistsAdapter(getContext(), playlists, onPlaylistClicked);
         playlistsRecycler.setAdapter(playlistsAdapter);
+        new GetPlaylistTask(playlists -> {
+//                Log.d("TAG", "after fetching is done, title: " + playlists.get(0).getTitle());
+//                Log.d("TAG", "after fetching is done, songMap: " + playlists.get(0).getSongs());
+        }).execute();
 
 
         //Browse By Language Recycler
-        songsByLanguageList.add(new Playlist(R.drawable.img, "Punjabi", "Musix", 9000));
-        languageRecycler = view.findViewById(R.id.recyclerLanguage);
-
-        GridLayoutManager layoutManager2 = new GridLayoutManager(getContext(), 3);
-        languageRecycler.setLayoutManager(layoutManager2);
-
-        PlaylistsAdapter languageAdapter = new PlaylistsAdapter(songsByLanguageList);
-        languageRecycler.setAdapter(languageAdapter);
+//        songsByLanguageList.add(new Playlist(R.drawable.img, "Punjabi", "Musix", 9000, new HashMap<>()) );
+//        languageRecycler = view.findViewById(R.id.recyclerLanguage);
+//
+//        GridLayoutManager layoutManager2 = new GridLayoutManager(getContext(), 3);
+//        languageRecycler.setLayoutManager(layoutManager2);
+//
+//        PlaylistsAdapter languageAdapter = new PlaylistsAdapter(songsByLanguageList);
+//        languageRecycler.setAdapter(languageAdapter);
 
         return view;
     }
@@ -212,6 +229,54 @@ public class HomeFragment extends Fragment {
         Log.d("TAG", "songsList size: " + songsList.size());
         return songsList;
     }
+
+    private class GetPlaylistTask extends AsyncTask<Void, Void, List<Playlist>>{
+        private final PlaylistCallback playlistCallback;
+
+        private GetPlaylistTask(PlaylistCallback playlistCallback) {
+            this.playlistCallback = playlistCallback;
+        }
+
+        @Override
+        protected List<Playlist> doInBackground(Void... voids) {return fetchPlaylists();}
+        private List<Playlist> fetchPlaylists() {
+            Log.d("TAG", "entered fetchPlaylists");
+            DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference()
+                    .child("playlist")
+                    .child(FirebaseAuth.getInstance().getCurrentUser().getUid());
+            List<Playlist> playlistList = new ArrayList<>();
+            databaseReference.addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot snapshot) {
+                    for(DataSnapshot dataSnapshot : snapshot.getChildren()){
+                        Playlist playlist = dataSnapshot.getValue(Playlist.class);
+                        playlistList.add(playlist);
+                    }
+                    playlists.clear();
+                    playlists.addAll(playlistList);
+                    playlistsAdapter.notifyDataSetChanged();
+                    Log.d("TAG", "Fetched Playlists");
+                    for(Playlist playlist : playlists){
+                        Log.d("TAG", "title: " + playlist.getTitle());
+                        Log.d("TAG", "banner: " + playlist.getBanner());
+                        Log.d("TAG", "creator: " + playlist.getCreator());
+                        Log.d("TAG", "duration: " + playlist.getDuration());
+                        Log.d("TAG", "songMap: " + playlist.getSongs());
+                    }
+                    playlistCallback.onPlaylistsFetched(playlistList);
+                }
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError error) {
+                    Toast.makeText(getContext(), "Error fetching data: " + error.getMessage(), Toast.LENGTH_SHORT).show();
+                    Log.d("TAG", "Error fetching data: " + error.getMessage());
+                }
+            });
+            return playlistList;
+        }
+    }
+
+
 
     public void signOut() {
         // [START auth_sign_out]

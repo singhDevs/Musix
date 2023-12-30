@@ -1,24 +1,43 @@
 package com.example.musix.models;
 
-public class Playlist {
-    private int Banner;
+import android.os.Parcel;
+import android.os.Parcelable;
+import android.util.Log;
+
+import java.util.HashMap;
+import java.util.Map;
+
+public class Playlist implements Parcelable {
+    private int banner;
     private String title;
     private String creator;
-    private int durationInSeconds;
+    private int duration;
+    private Map<String, Boolean> songs;
 
-    public Playlist(int banner, String title, String creator, int durationInSeconds) {
-        Banner = banner;
+    public Playlist() {
+    }
+
+    public Playlist(String title, String creator, int duration, Map<String, Boolean> songs) {
         this.title = title;
         this.creator = creator;
-        this.durationInSeconds = durationInSeconds;
+        this.duration = duration;
+        this.songs = songs;
+    }
+
+    public Playlist(int banner, String title, String creator, int duration, Map<String, Boolean> songs) {
+        this.banner = banner;
+        this.title = title;
+        this.creator = creator;
+        this.duration = duration;
+        this.songs = songs;
     }
 
     public int getBanner() {
-        return Banner;
+        return banner;
     }
 
     public void setBanner(int banner) {
-        Banner = banner;
+        this.banner = banner;
     }
 
     public String getTitle() {
@@ -37,11 +56,66 @@ public class Playlist {
         this.creator = creator;
     }
 
-    public int getDurationInSeconds() {
-        return durationInSeconds;
+    public int getDuration() {
+        return duration;
     }
 
-    public void setDurationInSeconds(int durationInSeconds) {
-        this.durationInSeconds = durationInSeconds;
+    public void setDuration(int duration) {
+        this.duration = duration;
     }
+
+    public Map<String, Boolean> getSongs() {
+        return songs;
+    }
+
+    public void setSongs(HashMap<String, Boolean> songs) {
+        this.songs = songs;
+    }
+
+    // Parcelable implementation
+    protected Playlist(Parcel in) {
+        banner = in.readInt();
+        title = in.readString();
+        creator = in.readString();
+        duration = in.readInt();
+
+        int size = in.readInt();
+        songs = new HashMap<>(size);
+        for(int i = 0; i < size; i++){
+            String key = in.readString();
+            boolean value = in.readByte() != 0;
+            songs.put(key, value);
+        }
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeInt(banner);
+        dest.writeString(title);
+        dest.writeString(creator);
+        dest.writeInt(duration);
+
+        dest.writeInt(songs.size());
+        for(Map.Entry<String, Boolean> entry : songs.entrySet()){
+            dest.writeString(entry.getKey());
+            dest.writeByte((byte) (entry.getValue() ? 1 : 0));
+        }
+        Log.d("TAG", "Entered writeToParcel");
+    }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    public static final Creator<Playlist> CREATOR = new Creator<Playlist>() {
+        @Override
+        public Playlist createFromParcel(Parcel in) {
+            return new Playlist(in);
+        }
+        @Override
+        public Playlist[] newArray(int size) {
+            return new Playlist[size];
+        }
+    };
 }

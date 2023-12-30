@@ -11,7 +11,7 @@
         android:id="@+id/songBanner"
         android:layout_width="120dp"
         android:layout_height="120dp"
-        android:src="@drawable/img"
+        android:src="@drawable/bg_playlist"
         android:scaleType="centerCrop"
         app:riv_border_width="2dp"
         app:riv_border_color="@color/black"

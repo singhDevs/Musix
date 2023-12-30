@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/bg_primary"
+    tools:context=".activities.AddToPlaylist"
+    android:orientation="vertical"
+    android:gravity="center_horizontal">
+    <LinearLayout
+        android:id="@+id/headerLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="10dp"
+        android:gravity="center"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+        <ImageView
+            android:id="@+id/backBtn"
+            android:layout_width="35dp"
+            android:layout_height="35dp"
+            android:src="@drawable/ic_arrow_back"/>
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/add_to_playlist"
+            android:textAlignment="center"
+            android:textColor="@color/white"
+            android:fontFamily="@font/inter_medium"
+            android:textSize="20sp"/>
+        <View
+            android:layout_width="35dp"
+            android:layout_height="35dp"/>
+    </LinearLayout>
+    <Button
+        android:id="@+id/newPlaylistBtn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:backgroundTint="@color/white"
+        android:text="Create New    ➕"
+        app:layout_constraintTop_toBottomOf="@id/headerLayout"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:textColor="@color/black"
+        android:fontFamily="@font/inter_bold"/>
+
+    <LinearLayout
+        android:id="@+id/recyclerLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/newPlaylistBtn"
+        android:layout_marginTop="20dp"
+        android:paddingHorizontal="10dp">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Adding to"
+            android:textColor="#BCBCBC"
+            android:fontFamily="@font/inter_semibold"
+            android:textSize="18sp"
+            android:paddingHorizontal="10dp"/>
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recyclerView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"/>
+    </LinearLayout>
+
+    <Button
+        android:id="@+id/doneBtn"
+        android:layout_width="110dp"
+        android:layout_height="60dp"
+        android:text="@string/done"
+        android:fontFamily="@font/inter_bold"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        android:layout_marginBottom="50dp"/>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

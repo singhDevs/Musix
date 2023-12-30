@@ -8,9 +8,9 @@
         android:title="@string/search"
         android:icon="@drawable/ic_search" />
     <item
-        android:id="@+id/navMyMusic"
-        android:title="@string/my_music"
-        android:icon="@drawable/ic_folder" />
+        android:id="@+id/navYourLibrary"
+        android:title="@string/your_library"
+        android:icon="@drawable/ic_library_music" />
     <item
         android:id="@+id/navPremium"
         android:title="@string/premium"

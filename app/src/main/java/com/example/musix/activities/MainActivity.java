@@ -11,6 +11,7 @@ import android.view.MenuItem;
 
 import com.example.musix.R;
 import com.example.musix.fragments.HomeFragment;
+import com.example.musix.fragments.LibraryFragment;
 import com.example.musix.fragments.SearchFragment;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
@@ -49,6 +50,15 @@ public class MainActivity extends AppCompatActivity {
                     }
                     else{
                         fragmentTransaction.replace(R.id.container, new SearchFragment());
+                    }
+                }
+                if(itemId == R.id.navYourLibrary){
+                    if(!loadedFragment){
+                        fragmentTransaction.add(R.id.container, new LibraryFragment());
+                        loadedFragment = true;
+                    }
+                    else{
+                        fragmentTransaction.replace(R.id.container, new LibraryFragment());
                     }
                 }
                 fragmentTransaction.commit();

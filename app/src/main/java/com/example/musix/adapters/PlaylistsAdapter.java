@@ -1,5 +1,6 @@
 package com.example.musix.adapters;
 
+import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -8,18 +9,22 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.bumptech.glide.Glide;
 import com.example.musix.R;
 import com.example.musix.models.Playlist;
 import com.makeramen.roundedimageview.RoundedImageView;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class PlaylistsAdapter extends RecyclerView.Adapter<PlaylistsAdapter.ViewHolder> {
-    List<Playlist> playlists = new ArrayList<>();
+    List<Playlist> playlists;
+    OnPlaylistClicked onPlaylistClicked;
+    Context context;
 
-    public PlaylistsAdapter(List<Playlist> playlists) {
+    public PlaylistsAdapter(Context context, List<Playlist> playlists, OnPlaylistClicked onPlaylistClicked) {
         this.playlists = playlists;
+        this.onPlaylistClicked = onPlaylistClicked;
+        this.context = context;
     }
 
     @NonNull
@@ -32,9 +37,27 @@ public class PlaylistsAdapter extends RecyclerView.Adapter<PlaylistsAdapter.View
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
+        if(playlists.get(position).getTitle().equals("Liked Songs")){
+            int resourceId = context.getResources().getIdentifier("bg_liked_playlist", "drawable", context.getPackageName());
+            Glide.with(holder.itemView.getContext())
+                    .load(resourceId)
+                    .into(holder.banner);
+        }
+        else{
+            int resourceId = context.getResources().getIdentifier("bg_playlist", "drawable", context.getPackageName());
+            Glide.with(holder.itemView.getContext())
+                    .load(resourceId)
+                    .into(holder.banner);
+        }
         holder.banner.setImageResource(playlists.get(position).getBanner());
         holder.title.setText(playlists.get(position).getTitle());
         holder.artist.setText(playlists.get(position).getCreator());
+
+        holder.itemView.setOnClickListener(view -> {
+            if(onPlaylistClicked != null){
+                onPlaylistClicked.onPlaylistClicked(playlists.get(position));
+            }
+        });
     }
 
     @Override
@@ -51,5 +74,9 @@ public class PlaylistsAdapter extends RecyclerView.Adapter<PlaylistsAdapter.View
             title = itemView.findViewById(R.id.title);
             artist = itemView.findViewById(R.id.artist);
         }
+    }
+
+    public interface OnPlaylistClicked{
+        public void onPlaylistClicked(Playlist playlist);
     }
 }

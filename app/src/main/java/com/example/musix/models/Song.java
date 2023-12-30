@@ -7,6 +7,7 @@ import java.io.Serializable;
 
 public class Song implements Parcelable, Serializable {
     private String id;
+    private String key;
     private String Banner;
     private String title;
     private String artist;
@@ -14,8 +15,9 @@ public class Song implements Parcelable, Serializable {
     private String album;
     private int releaseYear;
 
-    public Song(String id, String banner, String title, String artist, int durationInSeconds, String album, int releaseYear) {
+    public Song(String id, String key, String banner, String title, String artist, int durationInSeconds, String album, int releaseYear) {
         this.id = id;
+        this.key = key;
         this.Banner = banner;
         this.title = title;
         this.artist = artist;
@@ -24,8 +26,9 @@ public class Song implements Parcelable, Serializable {
         this.releaseYear = releaseYear;
     }
 
-    public Song(String id, String banner, String title, String artist) {
+    public Song(String id, String key, String banner, String title, String artist) {
         this.id = id;
+        this.key = key;
         this.Banner = banner;
         this.title = title;
         this.artist = artist;
@@ -34,6 +37,7 @@ public class Song implements Parcelable, Serializable {
     // Parcelable constructor
     protected Song(Parcel in) {
         id = in.readString();
+        key = in.readString();
         Banner = in.readString();
         title = in.readString();
         artist = in.readString();
@@ -55,12 +59,12 @@ public class Song implements Parcelable, Serializable {
     };
 
     public Song() {
-
     }
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeString(id);
+        dest.writeString(key);
         dest.writeString(Banner);
         dest.writeString(title);
         dest.writeString(artist);
@@ -80,6 +84,14 @@ public class Song implements Parcelable, Serializable {
 
     public void setId(String id) {
         this.id = id;
+    }
+
+    public String getKey() {
+        return key;
+    }
+
+    public void setKey(String key) {
+        this.key = key;
     }
 
     public String getBanner() {

@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".activities.NewPlaylist"
+    android:background="@drawable/bg_new_playlist">
+
+    <TextView
+        android:id="@+id/txtName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/enter_playlist_name"
+        android:textColor="@color/white"
+        android:textSize="30sp"
+        android:textAlignment="center"
+        android:fontFamily="@font/inter_bold"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        android:layout_marginTop="300dp"/>
+
+    <EditText
+        android:id="@+id/edtTextName"
+        android:layout_width="390dp"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@id/txtName"
+        app:layout_constraintStart_toStartOf="@id/txtName"
+        app:layout_constraintEnd_toEndOf="@id/txtName"
+        android:fontFamily="@font/inter_semibold"
+        android:background="@drawable/edit_txt_bottom_line"
+        android:textColor="@color/white"
+        android:textSize="25sp"
+        android:layout_marginTop="5dp"/>
+
+    <Button
+        android:id="@+id/doneBtn"
+        android:layout_width="100dp"
+        android:layout_height="55dp"
+        android:text="@string/done"
+        app:layout_constraintTop_toBottomOf="@id/edtTextName"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:backgroundTint="#CCCCCC"
+        android:textColor="@color/black"
+        android:layout_marginTop="10dp"
+        android:fontFamily="@font/inter_bold"
+        android:textSize="15sp"/>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -8,4 +8,19 @@
         <!-- ... other theme attributes ... -->
     </style>
 
+    <style name="ToolbarStyle" parent="Widget.AppCompat.Toolbar">
+        <item name="android:titleTextAppearance">@style/TitleTextAppearance</item>
+    </style>
+
+    <style name="TitleTextAppearance" parent="TextAppearance.Widget.AppCompat.Toolbar.Title">
+        <item name="fontFamily">@font/inter_medium</item>
+        <item name="android:textSize">20sp</item>
+        <item name="android:textColor">@color/white</item>
+    </style>
+
+    <style name="CollapsingToolbarTitle" parent="Widget.Material3.CollapsingToolbar">
+        <item name="fontFamily">@font/inter_black</item>
+        <item name="android:textSize">30sp</item>
+        <item name="android:textColor">@color/white</item>
+    </style>
 </resources>

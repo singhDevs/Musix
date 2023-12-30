@@ -5,27 +5,29 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.content.Context;
 import android.content.Intent;
 import android.media.AudioManager;
-import android.media.Image;
-import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.Handler;
-import android.provider.MediaStore;
+import android.os.Looper;
+import android.os.Parcelable;
 import android.util.Log;
 import android.view.View;
-import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
 import com.example.musix.R;
+import com.example.musix.handlers.FirebaseHandler;
+import com.example.musix.models.Playlist;
 import com.example.musix.models.Song;
 import com.google.android.exoplayer2.MediaItem;
 import com.google.android.exoplayer2.SimpleExoPlayer;
-import com.google.firebase.storage.FirebaseStorage;
-import com.google.firebase.storage.StorageReference;
+import com.google.android.material.bottomsheet.BottomSheetBehavior;
+import com.google.firebase.auth.FirebaseAuth;
 import com.makeramen.roundedimageview.RoundedImageView;
 
+import java.util.HashMap;
 import java.util.List;
 
 public class MusicPlayer extends AppCompatActivity {
@@ -35,8 +37,8 @@ public class MusicPlayer extends AppCompatActivity {
     private List<Song> songList;
     private int songPosition;
     private RoundedImageView songBanner;
-    TextView songTitle, songArtist, currDuration, songDuration;
-    ImageView playBtn, nextBtn, prevBtn, backBtn, likeBtn, repeatBtn, volumeIcon, shuffleBtn;
+    TextView songTitle, songArtist, currDuration, songDuration, playlistName;
+    ImageView playBtn, nextBtn, prevBtn, backBtn, likeBtn, repeatBtn, volumeIcon, shuffleBtn, moreBtn;
     SeekBar seekbar, volumeSeekbar;
     Handler handler;
     int duration;
@@ -53,6 +55,7 @@ public class MusicPlayer extends AppCompatActivity {
     public int repeatState;
     public int musicStatus;
     private int shuffleStatus;
+    private String uid = "";
 
     @Override
     protected void onStart() {
@@ -92,6 +95,7 @@ public class MusicPlayer extends AppCompatActivity {
 
         player = new SimpleExoPlayer.Builder(this).build();
 
+        playlistName = findViewById(R.id.playlistName);
         songTitle = findViewById(R.id.songTitle);
         songArtist = findViewById(R.id.songArtist);
         currDuration = findViewById(R.id.currDuration);
@@ -105,6 +109,7 @@ public class MusicPlayer extends AppCompatActivity {
         nextBtn = findViewById(R.id.nextBtn);
         prevBtn = findViewById(R.id.prevBtn);
         backBtn = findViewById(R.id.backBtn);
+        moreBtn = findViewById(R.id.moreBtn);
         seekbar = findViewById(R.id.seekBar);
         volumeSeekbar = findViewById(R.id.volumeSeekbar);
         volumeIcon = findViewById(R.id.volumeIcon);
@@ -119,82 +124,79 @@ public class MusicPlayer extends AppCompatActivity {
         songList = (List<Song>) intent.getSerializableExtra("songList");
         if(songList == null) Log.d("TAG", "before, songList is null");
         songPosition = intent.getIntExtra("songPosition", 0);
+        uid = intent.getStringExtra("currentUser");
 
-        backBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                finish();
+        playlistName.setText(intent.getStringExtra("playlistName"));
+        backBtn.setOnClickListener(view -> finish());
+
+        playBtn.setOnClickListener(view -> {
+            if(musicStatus == PAUSED_MUSIC) playMusic();
+            else if(musicStatus == PLAYING_MUSIC) pauseMusic();
+        });
+
+        nextBtn.setOnClickListener(view -> playNext());
+
+        prevBtn.setOnClickListener(view -> playPrev());
+
+        likeBtn.setOnClickListener(view -> {
+            //TODO: load Liked Playlist on Login
+            if(likeState == NOT_LIKED){
+                likeBtn.setImageResource(R.drawable.heart_filled);
+                likeState = LIKED;
+                Playlist likedPlaylist = new Playlist(0, "Liked Songs", FirebaseAuth.getInstance().getCurrentUser().getDisplayName(), 0, new HashMap<>());
+                FirebaseHandler.addLikedSong(getApplicationContext(), likedPlaylist, uid, songList.get(songPosition));
+            }
+            else{
+                likeBtn.setImageResource(R.drawable.heart_outline);
+                likeState = NOT_LIKED;
+                FirebaseHandler.removeLikedSong(getApplicationContext(), uid, songList.get(songPosition));
             }
         });
 
-        playBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if(musicStatus == PAUSED_MUSIC) playMusic();
-                else if(musicStatus == PLAYING_MUSIC) pauseMusic();
+        shuffleBtn.setOnClickListener(view -> {
+            if(shuffleStatus == NO_SHUFFLE){
+                shuffleStatus = SHUFFLE;
+                shuffleBtn.setImageResource(R.drawable.shuffle);
+            }
+            else{
+                shuffleStatus = NO_SHUFFLE;
+                shuffleBtn.setImageResource(R.drawable.no_shuffle);
             }
         });
 
-        nextBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                playNext();
+        repeatBtn.setOnClickListener(view -> {
+            if(repeatState == NOT_REPEATED){
+                repeatBtn.setImageResource(R.drawable.repeat);
+                repeatState = REPEAT;
+            }
+            else if(repeatState == REPEAT){
+                repeatBtn.setImageResource(R.drawable.repeat_one);
+                repeatState = REPEAT_ONE;
+            }
+            else{
+                repeatBtn.setImageResource(R.drawable.no_repeat);
+                repeatState = NOT_REPEATED;
             }
         });
 
-        prevBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                playPrev();
+        moreBtn.setOnClickListener(view -> {
+            final LinearLayout layoutMore = findViewById(R.id.layoutMore);
+            final BottomSheetBehavior<LinearLayout> bottomSheetBehavior = BottomSheetBehavior.from(layoutMore);
+            if(bottomSheetBehavior.getState() != BottomSheetBehavior.STATE_EXPANDED){
+                layoutMore.setVisibility(View.VISIBLE);
+                bottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
+            }
+            else{
+                bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
+                new Handler(Looper.getMainLooper()).postDelayed(() -> layoutMore.setVisibility(View.GONE), 150);
             }
         });
 
-        likeBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-
-                //TODO: here implement pushing and removing this like song to the DB
-                if(likeState == NOT_LIKED){
-                    likeBtn.setImageResource(R.drawable.heart_filled);
-                    likeState = LIKED;
-                }
-                else{
-                    likeBtn.setImageResource(R.drawable.heart_outline);
-                    likeState = NOT_LIKED;
-                }
-            }
-        });
-
-        shuffleBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if(shuffleStatus == NO_SHUFFLE){
-                    shuffleStatus = SHUFFLE;
-                    shuffleBtn.setImageResource(R.drawable.shuffle);
-                }
-                else{
-                    shuffleStatus = NO_SHUFFLE;
-                    shuffleBtn.setImageResource(R.drawable.no_shuffle);
-                }
-            }
-        });
-
-        repeatBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if(repeatState == NOT_REPEATED){
-                    repeatBtn.setImageResource(R.drawable.repeat);
-                    repeatState = REPEAT;
-                }
-                else if(repeatState == REPEAT){
-                    repeatBtn.setImageResource(R.drawable.repeat_one);
-                    repeatState = REPEAT_ONE;
-                }
-                else{
-                    repeatBtn.setImageResource(R.drawable.no_repeat);
-                    repeatState = NOT_REPEATED;
-                }
-            }
+        LinearLayout addToPlaylist = findViewById(R.id.addToPlaylist);
+        addToPlaylist.setOnClickListener(view -> {
+            Intent intent1 = new Intent(this, AddToPlaylist.class);
+            intent1.putExtra("song", (Parcelable) song);
+            startActivity(intent1);
         });
 
         seekbar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
@@ -269,10 +271,10 @@ public class MusicPlayer extends AppCompatActivity {
                 }
             }
         });
-
-        updateSeekBar(duration);
+        updateSeekBar();
     }
-    private void updateSeekBar(int duration){
+
+    private void updateSeekBar(){
         handler.postDelayed(new Runnable() {
             @Override
             public void run() {
@@ -310,6 +312,9 @@ public class MusicPlayer extends AppCompatActivity {
     public void resetPlayer() {
         if(player != null){
             musicStatus = PAUSED_MUSIC;
+            //TODO: temporary provision
+            likeState = NOT_LIKED;
+            likeBtn.setImageResource(R.drawable.heart_outline);
             player.pause();
             playBtn.setImageResource(R.drawable.ic_play_filled);
             player.seekTo(0);
