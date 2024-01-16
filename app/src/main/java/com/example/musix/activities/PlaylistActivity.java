@@ -93,6 +93,7 @@ public class PlaylistActivity extends AppCompatActivity {
 
         PlaylistActivityAdapter.OnPlaylistClickListener onPlaylistClickListener = (songList, position) -> {
             Intent intent = new Intent(this, MusicPlayer.class);
+            intent.putExtra("source", "internet");
             intent.putExtra("song", (Parcelable) songList.get(position));
             intent.putExtra("songList", (Serializable) songList);
             intent.putExtra("songUrl", songList.get(position).getId());
@@ -113,6 +114,7 @@ public class PlaylistActivity extends AppCompatActivity {
         playBtn = findViewById(R.id.playBtn);
         playBtn.setOnClickListener(view -> {
             Intent intent = new Intent(this, MusicPlayer.class);
+            intent.putExtra("source", "internet");
             intent.putExtra("song", (Parcelable) songs.get(0));
             intent.putExtra("songList", (Serializable) songs);
             intent.putExtra("songUrl", songs.get(0).getId());

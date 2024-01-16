@@ -32,13 +32,14 @@ import java.util.List;
 
 public class MusicPlayer extends AppCompatActivity {
     private SimpleExoPlayer player;
+    private int source;
     private AudioManager audioManager;
     private Song song;
     private List<Song> songList;
     private int songPosition;
     private RoundedImageView songBanner;
-    TextView songTitle, songArtist, currDuration, songDuration, playlistName;
-    ImageView playBtn, nextBtn, prevBtn, backBtn, likeBtn, repeatBtn, volumeIcon, shuffleBtn, moreBtn;
+    TextView songTitle, songArtist, currDuration, songDuration, playlistName, bottomTitle, bottomArtist;
+    ImageView playBtn, nextBtn, prevBtn, backBtn, likeBtn, repeatBtn, volumeIcon, shuffleBtn, moreBtn, bottomBanner;
     SeekBar seekbar, volumeSeekbar;
     Handler handler;
     int duration;
@@ -51,6 +52,8 @@ public class MusicPlayer extends AppCompatActivity {
     public final int REPEAT_ONE = 2;
     private final int NO_SHUFFLE = 0;
     private final int SHUFFLE = 1;
+    private final int INTERNET = 0;
+    private final int LOCAL_STORAGE = 1;
     public int likeState;
     public int repeatState;
     public int musicStatus;
@@ -98,6 +101,9 @@ public class MusicPlayer extends AppCompatActivity {
         playlistName = findViewById(R.id.playlistName);
         songTitle = findViewById(R.id.songTitle);
         songArtist = findViewById(R.id.songArtist);
+        bottomBanner = findViewById(R.id.banner);
+        bottomArtist = findViewById(R.id.artist);
+        bottomTitle = findViewById(R.id.title);
         currDuration = findViewById(R.id.currDuration);
         songDuration = findViewById(R.id.songDuration);
         musicStatus = PLAYING_MUSIC;
@@ -117,6 +123,8 @@ public class MusicPlayer extends AppCompatActivity {
         shuffleBtn = findViewById(R.id.shuffleBtn);
         repeatBtn = findViewById(R.id.repeatBtn);
         songBanner = findViewById(R.id.songBanner);
+
+        songTitle.setSelected(true);
 
         handler = new Handler();
 
@@ -436,5 +444,11 @@ public class MusicPlayer extends AppCompatActivity {
         songDuration.setText(formatTime(song.getDurationInSeconds()));
         seekbar.setMax(song.getDurationInSeconds());
         setBanner(song.getBanner(), songBanner);
+
+        bottomTitle.setText(song.getTitle());
+        bottomArtist.setText(song.getArtist());
+        Glide.with(this)
+                .load(song.getBanner())
+                .into(bottomBanner);
     }
 }

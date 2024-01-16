@@ -10,6 +10,7 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -38,6 +39,7 @@ public class AddToPlaylist extends AppCompatActivity {
     AddPlaylistAdapter adapter;
     Button doneBtn, newPlaylistBtn;
     ImageView backBtn;
+    View prevView;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -64,12 +66,20 @@ public class AddToPlaylist extends AppCompatActivity {
         RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false);
         recyclerView.setLayoutManager(layoutManager);
 
-        AddPlaylistAdapter.OnPlaylistClicked onPlaylistClicked = playlist -> {
+        AddPlaylistAdapter.OnPlaylistClicked onPlaylistClicked = (playlist, view) -> {
             if(selectedPlaylist == null){
                 selectedPlaylist = playlist;
+                view.setBackgroundColor(getColor(R.color.selection));
+                prevView = view;
             }
             else{
                 selectedPlaylist = playlist;
+//                TypedValue typedValue = new TypedValue();
+//                getTheme().resolveAttribute(android.R.attr.colorPrimary, typedValue, true);
+//                int primaryColor = typedValue.data;
+                prevView.setBackgroundColor(getColor(R.color.bg_primary));
+                view.setBackground(getDrawable(R.color.selection));
+                prevView = view;
             }
             Log.d("TAG", "selected playlist: " + selectedPlaylist);
         };
@@ -78,13 +88,14 @@ public class AddToPlaylist extends AppCompatActivity {
         doneBtn.setOnClickListener(view -> {
             FirebaseHandler.addSongToPlaylist(this, FirebaseDatabase.getInstance().getReference().child("playlist").child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child(selectedPlaylist.getTitle()), selectedPlaylist.getTitle(), song, new AddToPlaylistCallback() {
                 @Override
-                public void OnAddedToPlaylist() {
-                }
+                public void OnAddedToPlaylist() {}
 
                 @Override
                 public void OnSongAddedToPlaylist() {
                     finish();
                 }
+
+
             });
         });
 

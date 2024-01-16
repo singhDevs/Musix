@@ -1,7 +1,6 @@
 package com.example.musix.handlers;
 
 import android.content.Context;
-import android.content.Intent;
 import android.net.Uri;
 import android.os.Handler;
 import android.os.Looper;
@@ -10,12 +9,10 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 
-import com.example.musix.adapters.PlaylistActivityAdapter;
 import com.example.musix.callbacks.AddToPlaylistCallback;
-import com.example.musix.callbacks.PlaylistCallback;
+import com.example.musix.callbacks.SongCheckCallback;
 import com.example.musix.models.Playlist;
 import com.example.musix.models.Song;
-import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.gms.tasks.Tasks;
 import com.google.firebase.database.DataSnapshot;
@@ -30,9 +27,9 @@ import com.google.firebase.storage.UploadTask;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 public class FirebaseHandler {
+    static boolean isPresent;
     public static Task<Void> uploadSongData(Song song, Context context){
         DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference();
         DatabaseReference user = databaseReference.child("songs");
@@ -168,18 +165,35 @@ public class FirebaseHandler {
     }
 
     public static void addSongToPlaylist(Context context, DatabaseReference databaseReference, String playlistName, Song song, AddToPlaylistCallback addToPlaylistCallback){          //reference to playlist node under UID
-        final Boolean[] isPresent = {false};
+        isPresent = false;
+        SongCheckCallback songCheckCallback = () -> {
+            Log.d("TAG", "inside SongCheck callback");
+            if(!isPresent){
+                databaseReference.child("songs").child(song.getKey()).setValue(true).addOnCompleteListener(task -> {
+                    if(task.isSuccessful()){
+                        Toast.makeText(context, "Added to " + playlistName, Toast.LENGTH_SHORT).show();
+                        new Handler(Looper.getMainLooper()).postDelayed(addToPlaylistCallback::OnSongAddedToPlaylist, 500);
+                    }
+                    else{
+                        Log.d("TAG", "error: Key not set in DB. Error: " + task.getException());
+                    }
+                });
+            }
+        };
         databaseReference.child("songs").addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 for(DataSnapshot dataSnapshot : snapshot.getChildren()){
                     if(dataSnapshot.getKey().equals(song.getKey())){
+                        Log.d("TAG", "Song already present in this Playlist");
                         Toast.makeText(context, "Song already present in this Playlist", Toast.LENGTH_SHORT).show();
-                        isPresent[0] = true;
+                        isPresent = true;
                     }
                     else{
+                        Log.d("TAG", "Adding to this Playlist");
                         databaseReference.child("duration").setValue(song.getDurationInSeconds());
                     }
+                    songCheckCallback.OnSongChecked();
                 }
             }
             @Override
@@ -188,16 +202,8 @@ public class FirebaseHandler {
             }
         });
 
-        if(!isPresent[0]){
-            databaseReference.child("songs").child(song.getKey()).setValue(true).addOnCompleteListener(task -> {
-                if(task.isSuccessful()){
-                    Toast.makeText(context, "Added to " + playlistName, Toast.LENGTH_SHORT).show();
-                    new Handler(Looper.getMainLooper()).postDelayed(addToPlaylistCallback::OnSongAddedToPlaylist, 500);
-                }
-                else{
-                    Log.d("TAG", "error: Key not set in DB. Error: " + task.getException());
-                }
-            });
-        }
+//        if(!isPresent){
+//
+//        }
     }
 }

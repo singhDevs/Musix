@@ -37,7 +37,7 @@ public class PlaylistsAdapter extends RecyclerView.Adapter<PlaylistsAdapter.View
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        if(playlists.get(position).getTitle().equals("Liked Songs")){
+        if(playlists != null && playlists.get(position).getTitle().equals("Liked Songs")){
             int resourceId = context.getResources().getIdentifier("bg_liked_playlist", "drawable", context.getPackageName());
             Glide.with(holder.itemView.getContext())
                     .load(resourceId)

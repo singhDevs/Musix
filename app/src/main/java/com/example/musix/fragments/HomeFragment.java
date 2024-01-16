@@ -73,7 +73,6 @@ public class HomeFragment extends Fragment {
         account = GoogleSignIn.getLastSignedInAccount(getContext());
         gso = GoogleSignInHelper.getSignInOptions(getContext());
 
-
         String greeting = getGreeting();
         greetingTxt = view.findViewById(R.id.greetingTxt);
         greetingTxt.setText(greeting);
@@ -111,6 +110,7 @@ public class HomeFragment extends Fragment {
         latestHitsRecycler.setLayoutManager(layoutManager);
         LatestHitsAdapter.OnSongClickListener onSongClickListener = (song, position) -> {
             Intent intent = new Intent(getContext(), MusicPlayer.class);
+            intent.putExtra("source", "internet");
             intent.putExtra("song", (Parcelable) song);
             intent.putExtra("songUrl", song.getId());
             intent.putExtra("songList", (Serializable) latestHitsList);
@@ -275,8 +275,6 @@ public class HomeFragment extends Fragment {
             return playlistList;
         }
     }
-
-
 
     public void signOut() {
         // [START auth_sign_out]

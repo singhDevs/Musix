@@ -7,26 +7,30 @@
     tools:context=".activities.MusicPlayer"
     android:background="@color/black">
 
-    <LinearLayout
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical"
         android:gravity="center_horizontal"
+        android:orientation="vertical"
         android:paddingTop="12dp"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintStart_toStartOf="parent">
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
 
         <LinearLayout
+            android:id="@+id/linearLyt1"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:padding="10dp">
+            android:padding="10dp"
+            app:layout_constraintBottom_toBottomOf="@id/guideline"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent">
 
             <ImageView
                 android:id="@+id/backBtn"
                 android:layout_width="30dp"
                 android:layout_height="30dp"
-                android:src="@drawable/ic_arrow_back"/>
+                android:src="@drawable/ic_arrow_back" />
 
             <LinearLayout
                 android:layout_width="wrap_content"
@@ -34,89 +38,106 @@
                 android:layout_weight="1"
                 android:gravity="center"
                 android:orientation="vertical">
+
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="PLAYLIST"
-                    android:textColor="#8F8F8F"
                     android:fontFamily="@font/inter_semibold"
-                    android:textSize="12sp"
-                    android:textAlignment="center"/>
+                    android:text="PLAYLIST"
+                    android:textAlignment="center"
+                    android:textColor="#8F8F8F"
+                    android:textSize="12sp" />
+
                 <TextView
                     android:id="@+id/playlistName"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:fontFamily="@font/inter_medium"
                     android:text="Today's Top Hits"
                     android:textColor="@color/white"
-                    android:textSize="16sp"
-                    android:fontFamily="@font/inter_medium"/>
+                    android:textSize="16sp" />
             </LinearLayout>
 
             <ImageView
                 android:id="@+id/moreBtn"
                 android:layout_width="30dp"
                 android:layout_height="30dp"
-                android:src="@drawable/ic_more"/>
+                android:src="@drawable/ic_more" />
 
         </LinearLayout>
+
         <LinearLayout
+            android:id="@+id/linearLyt2"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
             android:gravity="center"
-            android:padding="10dp">
+            android:orientation="vertical"
+            app:layout_constraintBottom_toBottomOf="@id/guideline2"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="@id/guideline">
 
             <com.makeramen.roundedimageview.RoundedImageView
                 android:id="@+id/songBanner"
                 android:layout_width="350dp"
                 android:layout_height="350dp"
-                app:riv_corner_radius="15dp"
-                android:src="@drawable/img"
+                android:layout_marginBottom="10dp"
                 android:scaleType="centerCrop"
-                android:layout_marginTop="20dp"/>
+                android:src="@drawable/img"
+                app:riv_corner_radius="15dp" />
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:paddingHorizontal="25dp"
-                android:paddingTop="15dp"
+                android:gravity="center_vertical"
                 android:orientation="horizontal"
-                android:gravity="center_vertical">
+                android:paddingHorizontal="25dp"
+                android:paddingTop="15dp">
+
                 <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:orientation="vertical">
+
                     <TextView
                         android:id="@+id/songTitle"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="El Sueno"
+                        android:ellipsize="marquee"
+                        android:focusable="true"
+                        android:focusableInTouchMode="true"
                         android:fontFamily="@font/inter_bold"
-                        android:textColor="@color/white"
                         android:includeFontPadding="false"
-                        android:textSize="28sp"/>
+                        android:marqueeRepeatLimit="marquee_forever"
+                        android:scrollHorizontally="true"
+                        android:singleLine="true"
+                        android:text="El Sueno"
+                        android:textColor="@color/white"
+                        android:textSize="28sp" />
+
                     <TextView
                         android:id="@+id/songArtist"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:fontFamily="@font/inter_medium"
+                        android:includeFontPadding="false"
                         android:text="Diljit Dosanjh"
                         android:textColor="#BCBCBC"
-                        android:includeFontPadding="false"
-                        android:fontFamily="@font/inter_medium"
-                        android:textSize="15sp"/>
+                        android:textSize="15sp" />
 
                 </LinearLayout>
+
                 <View
                     android:layout_width="wrap_content"
                     android:layout_height="0dp"
-                    android:layout_weight="1"/>
+                    android:layout_weight="1" />
 
                 <ImageView
                     android:id="@+id/likeBtn"
                     android:layout_width="28dp"
                     android:layout_height="28dp"
-                    android:src="@drawable/heart_outline"
-                    android:contentDescription="@string/app_name" />
+                    android:contentDescription="@string/app_name"
+                    android:src="@drawable/heart_outline" />
 
             </LinearLayout>
 
@@ -126,9 +147,9 @@
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="5dp"
                 android:layout_marginTop="30dp"
-                android:progressTint="@color/white"
+                android:max="100"
                 android:progress="0"
-                android:max="100"/>
+                android:progressTint="@color/white" />
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -140,92 +161,122 @@
                     android:id="@+id/currDuration"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:fontFamily="@font/inter_semibold"
                     android:text="02:00"
                     android:textColor="#BCBCBC"
-                    android:fontFamily="@font/inter_semibold"
-                    android:textSize="12sp"/>
+                    android:textSize="12sp" />
+
                 <View
                     android:layout_width="wrap_content"
                     android:layout_height="0dp"
-                    android:layout_weight="1"/>
+                    android:layout_weight="1" />
+
                 <TextView
                     android:id="@+id/songDuration"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:fontFamily="@font/inter_semibold"
                     android:text="06:00"
                     android:textColor="#BCBCBC"
-                    android:fontFamily="@font/inter_semibold"
-                    android:textSize="12sp"/>
+                    android:textSize="12sp" />
 
             </LinearLayout>
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
+                android:layout_marginTop="10dp"
                 android:gravity="center"
-                android:layout_marginTop="10dp">
+                android:orientation="horizontal">
 
                 <ImageView
                     android:id="@+id/shuffleBtn"
                     android:layout_width="35dp"
                     android:layout_height="35dp"
                     android:layout_marginEnd="15dp"
-                    android:src="@drawable/no_shuffle"
-                    android:contentDescription="@string/app_name"/>
+                    android:contentDescription="@string/app_name"
+                    android:src="@drawable/no_shuffle" />
 
                 <ImageView
                     android:id="@+id/prevBtn"
                     android:layout_width="70dp"
                     android:layout_height="70dp"
-                    android:src="@drawable/ic_previous"
                     android:layout_marginHorizontal="10dp"
-                    android:contentDescription="@string/app_name"/>
+                    android:contentDescription="@string/app_name"
+                    android:src="@drawable/ic_previous" />
 
                 <ImageView
                     android:id="@+id/playBtn"
                     android:layout_width="90dp"
                     android:layout_height="90dp"
-                    android:src="@drawable/ic_play_filled"
-                    android:contentDescription="@string/app_name"/>
+                    android:contentDescription="@string/app_name"
+                    android:src="@drawable/ic_play_filled" />
 
                 <ImageView
                     android:id="@+id/nextBtn"
                     android:layout_width="70dp"
                     android:layout_height="70dp"
-                    android:src="@drawable/ic_next"
                     android:layout_marginHorizontal="10dp"
-                    android:contentDescription="@string/app_name"/>
+                    android:contentDescription="@string/app_name"
+                    android:src="@drawable/ic_next" />
 
                 <ImageView
                     android:id="@+id/repeatBtn"
                     android:layout_width="28dp"
                     android:layout_height="28dp"
                     android:layout_marginStart="15dp"
-                    android:src="@drawable/no_repeat"
-                    android:contentDescription="@string/app_name"/>
+                    android:contentDescription="@string/app_name"
+                    android:src="@drawable/no_repeat" />
 
             </LinearLayout>
         </LinearLayout>
+
         <LinearLayout
+            android:id="@+id/linearLyt3"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
             android:gravity="center"
-            android:paddingHorizontal="20dp">
+            android:orientation="horizontal"
+            android:paddingHorizontal="20dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/guideline2">
+
             <ImageView
                 android:id="@+id/volumeIcon"
                 android:layout_width="27dp"
                 android:layout_height="27dp"
-                android:src="@drawable/ic_volume"
-                android:contentDescription="@string/app_name" />
+                android:contentDescription="@string/app_name"
+                android:src="@drawable/ic_volume" />
+
             <SeekBar
                 android:id="@+id/volumeSeekbar"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"/>
+                android:layout_weight="1" />
         </LinearLayout>
 
-    </LinearLayout>
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/guideline"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            app:layout_constraintGuide_percent="0.07" />
+
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/guideline2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            app:layout_constraintGuide_percent="0.95" />
+
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/guideline6"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            app:layout_constraintGuide_begin="20dp" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
     <include layout="@layout/bottom_sheet_layout"/>
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

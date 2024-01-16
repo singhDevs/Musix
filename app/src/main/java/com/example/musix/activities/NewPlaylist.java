@@ -46,8 +46,7 @@ public class NewPlaylist extends AppCompatActivity {
                 Log.d("TAG", "inside doneBtn callback, now calling addSongToPlaylist...");
                 FirebaseHandler.addSongToPlaylist(this, databaseReference, playlistName, song, new AddToPlaylistCallback() {
                     @Override
-                    public void OnAddedToPlaylist() {
-                    }
+                    public void OnAddedToPlaylist() {}
 
                     @Override
                     public void OnSongAddedToPlaylist() {

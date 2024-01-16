@@ -5,7 +5,7 @@
     android:background="@color/bg_primary"
     android:padding="10dp"
     android:orientation="horizontal"
-    android:gravity="center">
+    android:gravity="center_vertical">
     <ImageView
         android:id="@+id/banner"
         android:layout_width="80dp"
@@ -36,7 +36,4 @@
             android:textSize="17sp"
             android:textColor="#BCBCBC"/>
     </LinearLayout>
-    <View
-        android:layout_width="100dp"
-        android:layout_height="0dp"/>
 </LinearLayout>

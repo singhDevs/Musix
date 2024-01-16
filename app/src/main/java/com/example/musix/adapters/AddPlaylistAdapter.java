@@ -33,14 +33,28 @@ public class AddPlaylistAdapter extends RecyclerView.Adapter<AddPlaylistAdapter.
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-//        Glide.with(holder.itemView.getContext())
-//                .load(playlists.get(position).getBanner())
-//                .into(holder.banner);
+        if(playlists != null && playlists.get(position).getTitle().equals("Liked Songs")){
+            int resourceId = holder.itemView.getContext().getResources().getIdentifier("bg_liked_playlist", "drawable", holder.itemView.getContext().getPackageName());
+            Glide.with(holder.itemView.getContext())
+                    .load(resourceId)
+                    .into(holder.banner);
+        }
+        else{
+            int resourceId = holder.itemView.getContext().getResources().getIdentifier("bg_playlist", "drawable", holder.itemView.getContext().getPackageName());
+            Glide.with(holder.itemView.getContext())
+                    .load(resourceId)
+                    .into(holder.banner);
+        }
         holder.playlistTitle.setText(playlists.get(position).getTitle());
-        holder.numTracks.setText(String.valueOf(playlists.get(position).getSongs().size()));
+
+        String textNum = "";
+        if(playlists.get(position).getSongs() != null) textNum = playlists.get(position).getSongs().size() + " song";
+        if(playlists.get(position).getSongs().size() > 1) textNum += "s";
+        holder.numTracks.setText(textNum);
+
         holder.itemView.setOnClickListener(view -> {
             if(onPlaylistClicked != null){
-                onPlaylistClicked.onPlaylistClicked(playlists.get(position));
+                onPlaylistClicked.onPlaylistClicked(playlists.get(position), holder.itemView);
             }
         });
     }
@@ -64,7 +78,7 @@ public class AddPlaylistAdapter extends RecyclerView.Adapter<AddPlaylistAdapter.
     }
 
     public interface OnPlaylistClicked {
-        void onPlaylistClicked(Playlist playlist);
+        void onPlaylistClicked(Playlist playlist, View view);
     }
 }
 

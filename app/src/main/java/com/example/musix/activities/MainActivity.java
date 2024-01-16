@@ -2,7 +2,6 @@ package com.example.musix.activities;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
@@ -11,7 +10,7 @@ import android.view.MenuItem;
 
 import com.example.musix.R;
 import com.example.musix.fragments.HomeFragment;
-import com.example.musix.fragments.LibraryFragment;
+import com.example.musix.fragments.FilesFragment;
 import com.example.musix.fragments.SearchFragment;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
@@ -52,13 +51,13 @@ public class MainActivity extends AppCompatActivity {
                         fragmentTransaction.replace(R.id.container, new SearchFragment());
                     }
                 }
-                if(itemId == R.id.navYourLibrary){
+                if(itemId == R.id.navFiles){
                     if(!loadedFragment){
-                        fragmentTransaction.add(R.id.container, new LibraryFragment());
+                        fragmentTransaction.add(R.id.container, new FilesFragment());
                         loadedFragment = true;
                     }
                     else{
-                        fragmentTransaction.replace(R.id.container, new LibraryFragment());
+                        fragmentTransaction.replace(R.id.container, new FilesFragment());
                     }
                 }
                 fragmentTransaction.commit();
@@ -66,11 +65,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-
-
         HomeFragment homeFragment = new HomeFragment();
-
-
 
         fragmentTransaction.replace(R.id.container, homeFragment);
         fragmentTransaction.commit();

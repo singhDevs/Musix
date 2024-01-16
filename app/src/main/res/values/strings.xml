@@ -26,4 +26,8 @@
     <string name="share">Share</string>
     <string name="done">Done</string>
     <string name="enter_playlist_name">Enter Playlist name</string>
+    <string name="files">Files</string>
+    <string name="play_from_your_local_storage">Play from your Local Storage</string>
+    <string name="nothing_played_yet">Nothing played yet...</string>
+    <string name="play_from_files">Play from Files</string>
 </resources>
