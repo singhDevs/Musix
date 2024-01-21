@@ -23,7 +23,7 @@ import android.widget.Toast;
 import com.bumptech.glide.Glide;
 import com.example.musix.R;
 import com.example.musix.activities.Login;
-import com.example.musix.activities.MusicPlayer;
+import com.example.musix.activities.NewMusicPlayer;
 import com.example.musix.activities.PlaylistActivity;
 import com.example.musix.adapters.LatestHitsAdapter;
 import com.example.musix.adapters.PlaylistsAdapter;
@@ -109,7 +109,7 @@ public class HomeFragment extends Fragment {
         LinearLayoutManager layoutManager = new LinearLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, false);
         latestHitsRecycler.setLayoutManager(layoutManager);
         LatestHitsAdapter.OnSongClickListener onSongClickListener = (song, position) -> {
-            Intent intent = new Intent(getContext(), MusicPlayer.class);
+            Intent intent = new Intent(getContext(), NewMusicPlayer.class);
             intent.putExtra("source", "internet");
             intent.putExtra("song", (Parcelable) song);
             intent.putExtra("songUrl", song.getId());
@@ -137,7 +137,7 @@ public class HomeFragment extends Fragment {
             intent.putExtra("playlist", (Parcelable) playlist);
             if(playlist == null) Log.d("TAG", "in Home Fragment, playlist is null!");
             else {
-                Log.d("TAG", "in Home Fragment, playlist is NOT null! size: " + playlist.getSongs().size());
+//                Log.d("TAG", "in Home Fragment, playlist is NOT null! size: " + playlist.getSongs().size());
                 for(Map.Entry<String, Boolean> entry : playlist.getSongs().entrySet()){
                     Log.d("TAG", "key: " + entry.getKey() + "\t\tValue: " + entry.getValue());
                 }
