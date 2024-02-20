@@ -28,6 +28,7 @@ import java.util.HashMap;
 
 public class NewPlaylist extends AppCompatActivity {
     String playlistName;
+    Song song;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -37,14 +38,19 @@ public class NewPlaylist extends AppCompatActivity {
         Button doneBtn = findViewById(R.id.doneBtn);
 
         Intent intent = getIntent();
-        Song song = intent.getParcelableExtra("song");
+        song = intent.getParcelableExtra("song");
+
+        if(song == null)
+            Log.d("TAG", "WE GOT SONG NULL!!");
+        else
+            Log.d("TAG", "SONG AIN'T NULL!!");
 
         doneBtn.setOnClickListener(view -> {
             Log.d("TAG","Entered doneBtn click listener");
             playlistName = edtTextName.getText().toString();
             new CreatePlaylist(databaseReference -> {
                 Log.d("TAG", "inside doneBtn callback, now calling addSongToPlaylist...");
-                FirebaseHandler.addSongToPlaylist(this, databaseReference, playlistName, song, new AddToPlaylistCallback() {
+                FirebaseHandler.addSongToPlaylist(this, databaseReference, playlistName, song,new AddToPlaylistCallback() {
                     @Override
                     public void OnAddedToPlaylist() {}
 
@@ -66,6 +72,7 @@ public class NewPlaylist extends AppCompatActivity {
 
         @Override
         protected Void doInBackground(Void... voids) {
+            Log.d("TAG", "in Background: createPlaylist");
             createNewPlaylist();
             return null;
         }
@@ -76,9 +83,15 @@ public class NewPlaylist extends AppCompatActivity {
                     .child("playlist")
                     .child(FirebaseAuth.getInstance().getCurrentUser().getUid());
 
-            Playlist playlist = new Playlist(0, playlistName, FirebaseAuth.getInstance().getCurrentUser().getDisplayName(), 0, new HashMap<>());
+            HashMap<String, Boolean> songHashMap = new HashMap<>();
+            if(song == null) Log.d("TAG", "SONG is NULL!!");
+            else{
+                Log.d("TAG", "song Key: " + song.getKey());
+                songHashMap.put(song.getKey(), true);
+            }
+            Playlist playlist = new Playlist(0, playlistName, FirebaseAuth.getInstance().getCurrentUser().getDisplayName(), 0, songHashMap);
 
-
+            Log.d("TAG", playlist.getSongs().toString());
             DatabaseReference newPlaylist = databaseReference.child(playlistName);
             newPlaylist.setValue(playlist).addOnCompleteListener(new OnCompleteListener<Void>() {
                 @Override

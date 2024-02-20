@@ -30,4 +30,5 @@
     <string name="play_from_your_local_storage">Play from your Local Storage</string>
     <string name="nothing_played_yet">Nothing played yet...</string>
     <string name="play_from_files">Play from Files</string>
+    <string name="see_all">See all</string>
 </resources>

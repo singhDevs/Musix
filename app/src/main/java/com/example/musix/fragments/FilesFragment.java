@@ -25,7 +25,7 @@ import android.view.ViewGroup;
 import android.widget.Toast;
 
 import com.example.musix.R;
-import com.example.musix.activities.MusicPlayer;
+import com.example.musix.activities.NewMusicPlayer;
 import com.example.musix.callbacks.RetrieveMetaData;
 import com.example.musix.models.Playlist;
 import com.example.musix.models.Song;
@@ -75,7 +75,7 @@ public class FilesFragment extends Fragment{
 //                if(song1.getId() != null) Log.d("TAG", " SONG URL: " + song.getId());
 //                else Log.d("TAG", "SONG URL IS NULL!");
 
-                Intent intent = new Intent(getContext(), MusicPlayer.class);
+                Intent intent = new Intent(getContext(), NewMusicPlayer.class);
                 intent.putExtra("song", (Parcelable) song1);
                 intent.putExtra("songUrl", song1.getId());
                 intent.putExtra("songList", (Serializable) songList);

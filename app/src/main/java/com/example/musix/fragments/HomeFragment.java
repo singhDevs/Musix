@@ -1,6 +1,7 @@
 package com.example.musix.fragments;
 
 import android.content.Intent;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 
@@ -23,11 +24,13 @@ import android.widget.Toast;
 import com.bumptech.glide.Glide;
 import com.example.musix.R;
 import com.example.musix.activities.Login;
-import com.example.musix.activities.MusicPlayer;
+import com.example.musix.activities.NewMusicPlayer;
 import com.example.musix.activities.PlaylistActivity;
+import com.example.musix.activities.SeeAllActivtiy;
 import com.example.musix.adapters.LatestHitsAdapter;
 import com.example.musix.adapters.PlaylistsAdapter;
 import com.example.musix.callbacks.PlaylistCallback;
+import com.example.musix.handlers.FirebaseHandler;
 import com.example.musix.handlers.GoogleSignInHelper;
 import com.example.musix.models.Playlist;
 import com.example.musix.models.Song;
@@ -45,6 +48,7 @@ import java.io.Serializable;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -56,9 +60,9 @@ public class HomeFragment extends Fragment {
     List<Playlist> songsByLanguageList = new ArrayList<>();
     LatestHitsAdapter latestHitsAdapter;
     PlaylistsAdapter playlistsAdapter;
-    TextView greetingTxt;
+    TextView greetingTxt, latestHitsSeeAll, playlistSeeAll;
     GoogleSignInOptions gso;
-    private Button logoutBtn;
+    private Button logoutBtn, uploadSong;
     private LinearLayout signInButton;
     private GoogleSignInAccount account;
 
@@ -70,8 +74,34 @@ public class HomeFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_home, container, false);
 
+
+//        uploadSong = view.findViewById(R.id.uploadSong);
+//        uploadSong.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                uploadSong();
+//            }
+//        });
+
         account = GoogleSignIn.getLastSignedInAccount(getContext());
         gso = GoogleSignInHelper.getSignInOptions(getContext());
+
+        latestHitsSeeAll = view.findViewById(R.id.latestHitsSeeAll);
+        playlistSeeAll = view.findViewById(R.id.playlistSeeAll);
+        latestHitsSeeAll.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(getContext(), SeeAllActivtiy.class);
+                startActivity(intent);
+            }
+        });
+        playlistSeeAll.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(getContext(), SeeAllActivtiy.class);
+                startActivity(intent);
+            }
+        });
 
         String greeting = getGreeting();
         greetingTxt = view.findViewById(R.id.greetingTxt);
@@ -109,7 +139,7 @@ public class HomeFragment extends Fragment {
         LinearLayoutManager layoutManager = new LinearLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, false);
         latestHitsRecycler.setLayoutManager(layoutManager);
         LatestHitsAdapter.OnSongClickListener onSongClickListener = (song, position) -> {
-            Intent intent = new Intent(getContext(), MusicPlayer.class);
+            Intent intent = new Intent(getContext(), NewMusicPlayer.class);
             intent.putExtra("source", "internet");
             intent.putExtra("song", (Parcelable) song);
             intent.putExtra("songUrl", song.getId());
@@ -137,9 +167,15 @@ public class HomeFragment extends Fragment {
             intent.putExtra("playlist", (Parcelable) playlist);
             if(playlist == null) Log.d("TAG", "in Home Fragment, playlist is null!");
             else {
-                Log.d("TAG", "in Home Fragment, playlist is NOT null! size: " + playlist.getSongs().size());
-                for(Map.Entry<String, Boolean> entry : playlist.getSongs().entrySet()){
-                    Log.d("TAG", "key: " + entry.getKey() + "\t\tValue: " + entry.getValue());
+                if(playlist.getSongs() == null){
+                    Log.d("TAG", "in Home Fragment, playlist songs is NULL!");
+                    playlist.setSongs(new HashMap<>());
+                }
+                else{
+                    Log.d("TAG", "in Home Fragment, playlist is NOT null! size: " + playlist.getSongs().size());
+                    for(Map.Entry<String, Boolean> entry : playlist.getSongs().entrySet()){
+                        Log.d("TAG", "key: " + entry.getKey() + "\t\tValue: " + entry.getValue());
+                    }
                 }
             }
             startActivity(intent);
@@ -188,6 +224,16 @@ public class HomeFragment extends Fragment {
             }
         }
     }
+
+    public void uploadSong() {
+        Song song = new Song("", "", "", "Arrogant", "AP Dhillon", 102, "NA", 2020);
+        int uri = getContext().getResources().getIdentifier("arrogant", "raw", getContext().getPackageName());
+        int bannerUri = getContext().getResources().getIdentifier("arrogant_bg", "raw", getContext().getPackageName());
+
+        Log.d("TAG", "Song File URI: " + uri);
+        FirebaseHandler.uploadSongData(song, uri, bannerUri, getContext());
+    }
+
 
     private class GetLatestHits extends AsyncTask<Void, Void, List<Song>> {
         @Override
@@ -250,6 +296,7 @@ public class HomeFragment extends Fragment {
                 public void onDataChange(@NonNull DataSnapshot snapshot) {
                     for(DataSnapshot dataSnapshot : snapshot.getChildren()){
                         Playlist playlist = dataSnapshot.getValue(Playlist.class);
+                        Log.d("playlist", "playlist title: " + playlist.getTitle());
                         playlistList.add(playlist);
                     }
                     playlists.clear();

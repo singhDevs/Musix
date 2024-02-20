@@ -2,11 +2,17 @@ package com.example.musix.activities;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.media.AudioManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.IBinder;
 import android.os.Looper;
 import android.os.Parcelable;
 import android.util.Log;
@@ -15,23 +21,32 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
+import com.example.musix.Notification.MusicPlayerNotificationService;
 import com.example.musix.R;
 import com.example.musix.handlers.FirebaseHandler;
 import com.example.musix.models.Playlist;
 import com.example.musix.models.Song;
+import com.example.musix.services.MusicService;
 import com.google.android.exoplayer2.MediaItem;
 import com.google.android.exoplayer2.SimpleExoPlayer;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
+import com.google.common.net.InternetDomainName;
 import com.google.firebase.auth.FirebaseAuth;
 import com.makeramen.roundedimageview.RoundedImageView;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.List;
 
 public class MusicPlayer extends AppCompatActivity {
-    private SimpleExoPlayer player;
+    private MusicService musicService;
+    private Intent serviceIntent;
+//    private SimpleExoPlayer player;
+    private NotificationManager notificationManager;
+    private MusicPlayerNotificationService notificationService;
     private int source;
     private AudioManager audioManager;
     private Song song;
@@ -59,6 +74,22 @@ public class MusicPlayer extends AppCompatActivity {
     public int musicStatus;
     private int shuffleStatus;
     private String uid = "";
+    private String playlistTitle;
+
+    private ServiceConnection serviceConnection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            Toast.makeText(MusicPlayer.this, "onServiceConnected called.", Toast.LENGTH_SHORT).show();
+
+            MusicService.LocalBinder binder = (MusicService.LocalBinder) service;
+            musicService = binder.getServiceInstance();
+        }
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            Toast.makeText(MusicPlayer.this, "onServiceDisconnected called", Toast.LENGTH_SHORT).show();
+            musicService = null;
+        }
+    };
 
     @Override
     protected void onStart() {
@@ -67,6 +98,9 @@ public class MusicPlayer extends AppCompatActivity {
         Intent intent = getIntent();
         song = intent.getParcelableExtra("song");
 
+        if(song != null)
+            notificationService = new MusicPlayerNotificationService(this, song);
+
         String songUrl = intent.getStringExtra("songUrl");
         Log.d("TAG", "songURL: " + songUrl);
 
@@ -74,21 +108,32 @@ public class MusicPlayer extends AppCompatActivity {
 
         setBanner(song.getBanner(), songBanner);
 
-        if(songUrl != null && !songUrl.isEmpty()){
-            Log.d("TAG", "set up done, now calling function streamAudio...");
-            streamAudioFromFirebase(songUrl);
-        }
-        else{
-            Log.d("TAG", "Error fetching Song URL in onStart");
-        }
+//        if(songUrl != null && !songUrl.isEmpty()){
+//            Log.d("TAG", "set up done, now calling function streamAudio...");
+//            streamAudioFromFirebase(songUrl);
+//        }
+//        else{
+//            Log.d("TAG", "Error fetching Song URL in onStart");
+//        }
     }
 
     @Override
     protected void onStop() {
         super.onStop();
-        player.release();
+//        player.release();
         audioManager.abandonAudioFocus(null);
+    }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        setUpMusicService();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        unbindService(serviceConnection);
     }
 
     @Override
@@ -96,7 +141,11 @@ public class MusicPlayer extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_music_player);
 
-        player = new SimpleExoPlayer.Builder(this).build();
+//        if(Build.VERSION .SDK_INT >= Build.VERSION_CODES.O){
+//            createChannel();
+//        }
+
+//        player = new SimpleExoPlayer.Builder(this).build();
 
         playlistName = findViewById(R.id.playlistName);
         songTitle = findViewById(R.id.songTitle);
@@ -108,7 +157,7 @@ public class MusicPlayer extends AppCompatActivity {
         songDuration = findViewById(R.id.songDuration);
         musicStatus = PLAYING_MUSIC;
         shuffleStatus = NO_SHUFFLE;
-        likeState = NOT_LIKED; //TODO: should not be hardcoded, store it in DB or something.
+        likeState = NOT_LIKED;
         repeatState = NOT_REPEATED;
 
         playBtn = findViewById(R.id.playBtn);
@@ -124,27 +173,36 @@ public class MusicPlayer extends AppCompatActivity {
         repeatBtn = findViewById(R.id.repeatBtn);
         songBanner = findViewById(R.id.songBanner);
 
-        songTitle.setSelected(true);
-
+        songTitle.setSelected(true);    //for Marquee
         handler = new Handler();
 
         Intent intent = getIntent();
         songList = (List<Song>) intent.getSerializableExtra("songList");
-        if(songList == null) Log.d("TAG", "before, songList is null");
+        if(songList == null) Log.d("TAG", "At the beginning in OnCreate, songList is null");
         songPosition = intent.getIntExtra("songPosition", 0);
         uid = intent.getStringExtra("currentUser");
 
-        playlistName.setText(intent.getStringExtra("playlistName"));
+        playlistTitle = intent.getStringExtra("playlistName");
+        playlistName.setText(playlistTitle);
+
+//        serviceIntent = new Intent(this, MusicService.class);
+//        serviceIntent.putExtra("playlistName", playlistName.getText().toString());
+//        serviceIntent.putExtra("songList", (Serializable) songList);
+//        serviceIntent.putExtra("songPosition", songPosition);
+
+        setUpMusicService();    //setting up Music Service
+
         backBtn.setOnClickListener(view -> finish());
 
         playBtn.setOnClickListener(view -> {
-            if(musicStatus == PAUSED_MUSIC) playMusic();
+            if(musicStatus == PAUSED_MUSIC) {
+                playMusic();
+            }
             else if(musicStatus == PLAYING_MUSIC) pauseMusic();
         });
 
-        nextBtn.setOnClickListener(view -> playNext());
-
-        prevBtn.setOnClickListener(view -> playPrev());
+//        nextBtn.setOnClickListener(view -> playNext());
+//        prevBtn.setOnClickListener(view -> playPrev());
 
         likeBtn.setOnClickListener(view -> {
             //TODO: load Liked Playlist on Login
@@ -164,10 +222,12 @@ public class MusicPlayer extends AppCompatActivity {
         shuffleBtn.setOnClickListener(view -> {
             if(shuffleStatus == NO_SHUFFLE){
                 shuffleStatus = SHUFFLE;
+                musicService.setMusicStatus(MusicService.SHUFFLE);
                 shuffleBtn.setImageResource(R.drawable.shuffle);
             }
             else{
                 shuffleStatus = NO_SHUFFLE;
+                musicService.setMusicStatus(MusicService.NO_SHUFFLE);
                 shuffleBtn.setImageResource(R.drawable.no_shuffle);
             }
         });
@@ -176,14 +236,17 @@ public class MusicPlayer extends AppCompatActivity {
             if(repeatState == NOT_REPEATED){
                 repeatBtn.setImageResource(R.drawable.repeat);
                 repeatState = REPEAT;
+                musicService.setMusicStatus(MusicService.REPEAT);
             }
             else if(repeatState == REPEAT){
                 repeatBtn.setImageResource(R.drawable.repeat_one);
                 repeatState = REPEAT_ONE;
+                musicService.setMusicStatus(MusicService.REPEAT_ONE);
             }
             else{
                 repeatBtn.setImageResource(R.drawable.no_repeat);
                 repeatState = NOT_REPEATED;
+                musicService.setMusicStatus(MusicService.NOT_REPEATED);
             }
         });
 
@@ -211,7 +274,8 @@ public class MusicPlayer extends AppCompatActivity {
             @Override
             public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
                 if(b){
-                    player.seekTo(i* 1000L);
+//                    player.seekTo(i* 1000L);
+                    musicService.playerSeekTo(i*1000L);
                     currDuration.setText(formatTime(i));
                 }
             }
@@ -223,6 +287,7 @@ public class MusicPlayer extends AppCompatActivity {
             public void onStopTrackingTouch(SeekBar seekBar) {}
         });
 
+        //Managing Volume
         audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
         int currVolume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
         int maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
@@ -271,62 +336,79 @@ public class MusicPlayer extends AppCompatActivity {
             });
         }
 
-        player.addListener(new SimpleExoPlayer.EventListener() {
-            @Override
-            public void onPlaybackStateChanged(int state) {
-                if (state == SimpleExoPlayer.STATE_ENDED) {
-                    playNext(); //TODO: implement Repeat or not
-                }
-            }
-        });
+//        player.addListener(new SimpleExoPlayer.EventListener() {
+//            @Override
+//            public void onPlaybackStateChanged(int state) {
+//                if (state == SimpleExoPlayer.STATE_ENDED) {
+//                    playNext(); //TODO: implement Repeat or not
+//                }
+//            }
+//        });
         updateSeekBar();
+    }
+
+    private void setUpMusicService() {
+//        if(MusicService.sSer)
+        serviceIntent = new Intent(this, MusicService.class);
+        bindService(serviceIntent, serviceConnection, Context.BIND_AUTO_CREATE);
+        serviceIntent.putExtra("songPosition", songPosition);
+        serviceIntent.putExtra("songList", (Serializable) songList);
+        serviceIntent.putExtra("playlistName", playlistTitle);
+        startService(serviceIntent);
     }
 
     private void updateSeekBar(){
         handler.postDelayed(new Runnable() {
             @Override
             public void run() {
-                if (player != null) {
-                    int currPosition = (int) (player.getCurrentPosition() / 1000);
-                    seekbar.setProgress(currPosition);
-                    currDuration.setText(formatTime(currPosition));
-                    handler.postDelayed(this, 1000);
-                }
+//                if(player != null){
+                int currPosition = (int) (musicService.getCurrentPosition() / 1000);
+                seekbar.setProgress(currPosition);
+                currDuration.setText(formatTime(currPosition));
+//            }
+                handler.postDelayed(this, 1000);
             }
         }, 1000);
     }
 
     public void playMusic() {
         Log.d("TAG", "Playing Music");
-        if (player != null) {
+//        if (player != null) {
             playBtn.setImageResource(R.drawable.ic_pause_filled);
             musicStatus = PLAYING_MUSIC;
-            player.setPlayWhenReady(true); // Start playing
-            Log.d("TAG", "after player.setPlayWhenReady(true)");
-        }
+            musicService.setMusicStatus(MusicService.PLAYING_MUSIC);
+            musicService.playMusic();
+//            player.setPlayWhenReady(true); // Start playing
+            Log.d("TAG", "after musicService.playMusic()");
+//        }
     }
 
     public void pauseMusic() {
         Log.d("TAG", "Music Paused");
-        if (player != null) {
+//        if (player != null) {
             playBtn.setImageResource(R.drawable.ic_play_filled);
             musicStatus = PAUSED_MUSIC;
-            player.pause();
+            musicService.setMusicStatus(MusicService.PAUSED_MUSIC);
+            musicService.pauseMusic();
+//            player.pause();
 //            player.setPlayWhenReady(false); // Pause
-            Log.d("TAG", "after player.setPlayWhenReady(false)");
-        }
+            Log.d("TAG", "after musicService.pauseMusic()");
+//        }
     }
 
     public void resetPlayer() {
-        if(player != null){
+//        if(player != null){
             musicStatus = PAUSED_MUSIC;
+            musicService.setMusicStatus(MusicService.PAUSED_MUSIC);
             //TODO: temporary provision
             likeState = NOT_LIKED;
             likeBtn.setImageResource(R.drawable.heart_outline);
-            player.pause();
+//            player.pause();
+            musicService.pauseMusic();
             playBtn.setImageResource(R.drawable.ic_play_filled);
-            player.seekTo(0);
-        }
+            musicService.playerSeekTo(0);
+//            player.seekTo(0);
+//        }
     }
 
     public void playNext(){
@@ -339,28 +421,28 @@ public class MusicPlayer extends AppCompatActivity {
                         randomPosition = (int) (Math.random() * (songList.size()) + 0);
                     }
                     songPosition = randomPosition;
-                    streamAudioFromFirebase(songList.get(songPosition).getId());
+//                    streamAudioFromFirebase(songList.get(songPosition).getId());
                     setUpUI(songList.get(songPosition));
-
                 }
                 else{
                     if(songPosition < songList.size() - 1){
                         resetPlayer();
-                        streamAudioFromFirebase(songList.get(++songPosition).getId());
+//                        streamAudioFromFirebase(songList.get(++songPosition).getId());
+                        songPosition++;
                         setUpUI(songList.get(songPosition));
                     }
                     else{
                         resetPlayer();
-                        streamAudioFromFirebase(songList.get(0).getId());
+//                        streamAudioFromFirebase(songList.get(0).getId());
                         setUpUI(songList.get(0));
                         songPosition = 0;
                     }
                 }
-
             }
             else if(repeatState == REPEAT_ONE){
                 resetPlayer();
-                playMusic();
+                musicService.playMusic();
+//                playMusic();
             }
             else{
                 if(shuffleStatus == SHUFFLE){
@@ -370,13 +452,14 @@ public class MusicPlayer extends AppCompatActivity {
                         randomPosition = (int) (Math.random() * (songList.size()) + 0);
                     }
                     songPosition = randomPosition;
-                    streamAudioFromFirebase(songList.get(songPosition).getId());
+//                    streamAudioFromFirebase(songList.get(songPosition).getId());
                     setUpUI(songList.get(songPosition));
                 }
                 else{
                     if(songPosition < songList.size() - 1){
                         resetPlayer();
-                        streamAudioFromFirebase(songList.get(++songPosition).getId());
+//                        streamAudioFromFirebase(songList.get(++songPosition).getId());
+                        songPosition++;
                         setUpUI(songList.get(songPosition));
                     }
                     else{
@@ -390,25 +473,26 @@ public class MusicPlayer extends AppCompatActivity {
         }
     }
 
-    public void playPrev(){
-        if(songList != null){
-            if(player.getCurrentPosition() / 1000 <= 2){
-                if(songPosition == 0) {
-                    resetPlayer();
-                    playMusic();
-                }
-                else{
-                    resetPlayer();
-                    streamAudioFromFirebase(songList.get(--songPosition).getId());
-                    setUpUI(songList.get(songPosition));
-                }
-            }
-            else{
-                resetPlayer();
-                playMusic();
-            }
-        }
-    }
+//    public void playPrev(){
+//        if(songList != null){
+//            if(player.getCurrentPosition() / 1000 <= 2){
+//                if(songPosition == 0) {
+////                    resetPlayer();
+////                    playMusic();
+//                }
+//                else{
+////                    resetPlayer();
+////                    streamAudioFromFirebase(songList.get(--songPosition).getId());
+//                    songPosition--;
+//                    setUpUI(songList.get(songPosition));
+//                }
+//            }
+//            else{
+////                resetPlayer();
+////                playMusic();
+//            }
+//        }
+//    }
 
     public String formatTime(int seconds) {
         int minutes = seconds / 60;
@@ -420,22 +504,20 @@ public class MusicPlayer extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        player.release();
+//        player.release();
     }
 
     private void streamAudioFromFirebase(String songUri){
-        MediaItem mediaItem = MediaItem.fromUri(songUri);
-        player.setMediaItem(mediaItem);
-        player.prepare();
-        player.play();
+//        MediaItem mediaItem = MediaItem.fromUri(songUri);
+//        player.setMediaItem(mediaItem);
+//        player.prepare();
+//        player.play();
         playBtn.setImageResource(R.drawable.ic_pause_filled);
-    }
 
-    private void setBanner(String bannerUrl, RoundedImageView roundedImageView){
-        Glide.with(this)
-                .load(bannerUrl)
-                .centerCrop()
-                .into(roundedImageView);
+        Log.d("TAG", "Calling show Notification");
+//        notificationService.showNotification();
+//        CreateNotification notification = new CreateNotification(this);
+//        notification.createNotification(this, songList.get(songPosition), R.drawable.ic_pause_filled, songPosition, songList.size() - 1);
     }
 
     private void setUpUI(Song song) {
@@ -450,5 +532,12 @@ public class MusicPlayer extends AppCompatActivity {
         Glide.with(this)
                 .load(song.getBanner())
                 .into(bottomBanner);
+    }
+
+    private void setBanner(String bannerUrl, RoundedImageView roundedImageView){
+        Glide.with(this)
+                .load(bannerUrl)
+                .centerCrop()
+                .into(roundedImageView);
     }
 }

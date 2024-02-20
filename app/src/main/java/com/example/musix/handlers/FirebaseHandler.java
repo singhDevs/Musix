@@ -30,7 +30,7 @@ import java.util.List;
 
 public class FirebaseHandler {
     static boolean isPresent;
-    public static Task<Void> uploadSongData(Song song, Context context){
+    public static Task<Void> uploadSongData(Song song, int uri, int bannerUri, Context context){
         DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference();
         DatabaseReference user = databaseReference.child("songs");
 
@@ -38,34 +38,50 @@ public class FirebaseHandler {
         String newUserId =newUser.getKey();
         song.setId(newUserId);
 
+        InputStream stream = context.getResources().openRawResource(uri);
+
         return newUser.setValue(song).continueWithTask(task -> {
             if(!task.isSuccessful()){
                 throw task.getException();
             }
             else{
                 Toast.makeText(context, "Song uploaded", Toast.LENGTH_LONG).show();
+                Log.d("TAG", "Song Data uploaded, now uploading Song File...");
+                uploadSong(stream, bannerUri, context);
             }
             return Tasks.forResult(null);
         });
     }
 
-    public static Task<Uri> uploadSong(InputStream inputStream, Context context){
+    public static Task<Uri> uploadSong(InputStream inputStream, int bannerUri, Context context){
         FirebaseStorage storage = FirebaseStorage.getInstance();
         StorageReference storageReference = storage.getReference().child("songs/" + System.currentTimeMillis() + ".mp3");
 
         UploadTask uploadTask = storageReference.putStream(inputStream);
+
         return uploadTask.continueWithTask(task -> {
-            if(!task.isSuccessful()){
-                Toast.makeText(context, "Error in uploading Audio File", Toast.LENGTH_SHORT).show();
+            if (task.isSuccessful()) {
+                Log.d("TAG", "Song file uploaded. Now uploading banner...");
+                return storageReference.getDownloadUrl();
+            } else {
+                Log.e("TAG", "Error uploading song file", task.getException());
                 throw task.getException();
             }
-            Log.d("TAG", "song file uploaded!");
-            return storageReference.getDownloadUrl();
+        }).continueWithTask(songUriTask -> {
+            Uri songURI = songUriTask.getResult();
+            InputStream stream = context.getResources().openRawResource(bannerUri);
+            return uploadBanner(stream, context, storageReference.getDownloadUrl().toString());
+        }).addOnSuccessListener(uri -> {
+            Log.d("TAG", "Banner file uploaded successfully!");
+        }).addOnFailureListener(e -> {
+            Log.e("TAG", "Error uploading banner", e);
         });
     }
 
     public static Task<Uri> uploadBanner(InputStream inputStream, Context context, String songUrl){
+        Log.d("TAG", "entered uploadBanner");
         FirebaseStorage storage = FirebaseStorage.getInstance();
+        Log.d("TAG", "banner name: " + songUrl);
         StorageReference reference = storage.getReference().child("banner/" + songUrl + ".jpg");
 
         UploadTask uploadTask = reference.putStream(inputStream);
@@ -74,7 +90,9 @@ public class FirebaseHandler {
                 Toast.makeText(context, "Error in uploading Banner", Toast.LENGTH_SHORT).show();
                 throw  task.getException();
             }
-            Log.d("TAG", "banner file uploaded!");
+            else{
+                Log.d("TAG", "banner file uploaded!");
+            }
             return reference.getDownloadUrl();
         });
     }
@@ -165,12 +183,27 @@ public class FirebaseHandler {
     }
 
     public static void addSongToPlaylist(Context context, DatabaseReference databaseReference, String playlistName, Song song, AddToPlaylistCallback addToPlaylistCallback){          //reference to playlist node under UID
+        Log.d("TAG", "inside addSongToPlaylist");
         isPresent = false;
+
         SongCheckCallback songCheckCallback = () -> {
             Log.d("TAG", "inside SongCheck callback");
-            if(!isPresent){
+//            if(!isPresent){
                 databaseReference.child("songs").child(song.getKey()).setValue(true).addOnCompleteListener(task -> {
                     if(task.isSuccessful()){
+                        databaseReference.addListenerForSingleValueEvent(new ValueEventListener() {
+                            @Override
+                            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                                databaseReference.child("duration").setValue(snapshot.child("duration").getValue(Integer.class) + song.getDurationInSeconds());
+//                                if(snapshot.child("duration").getValue() == null) databaseReference.child("duration").setValue(song.getDurationInSeconds());
+//                                else databaseReference.child("duration").setValue(snapshot.child("duration").getValue(Integer.class) + song.getDurationInSeconds());
+                            }
+
+                            @Override
+                            public void onCancelled(@NonNull DatabaseError error) {
+
+                            }
+                        });
                         Toast.makeText(context, "Added to " + playlistName, Toast.LENGTH_SHORT).show();
                         new Handler(Looper.getMainLooper()).postDelayed(addToPlaylistCallback::OnSongAddedToPlaylist, 500);
                     }
@@ -178,32 +211,51 @@ public class FirebaseHandler {
                         Log.d("TAG", "error: Key not set in DB. Error: " + task.getException());
                     }
                 });
-            }
+//            }
         };
+
         databaseReference.child("songs").addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
-                for(DataSnapshot dataSnapshot : snapshot.getChildren()){
-                    if(dataSnapshot.getKey().equals(song.getKey())){
-                        Log.d("TAG", "Song already present in this Playlist");
-                        Toast.makeText(context, "Song already present in this Playlist", Toast.LENGTH_SHORT).show();
-                        isPresent = true;
+                Log.d("addSong", "No of children" + snapshot.getChildrenCount());
+                if(snapshot.hasChildren()) {
+                    for (DataSnapshot dataSnapshot : snapshot.getChildren()) {
+                        if (dataSnapshot.getKey().equals(song.getKey())) {
+                            Log.d("TAG", "Song already present in this Playlist");
+                            Toast.makeText(context, "Song already present in this Playlist", Toast.LENGTH_SHORT).show();
+                            isPresent = true;
+                        } else {
+                            Log.d("TAG", "Adding to this Playlist");
+//                        finalDur[0] += song.getDurationInSeconds();
+//                        if(databaseReference. == null) Log.d("TAG", "SNAPSHOT Dur value NULL!");
+//                        else Log.d("TAG", "SNAPSHOT Dur value NOT NULL!");
+
+//                        if(snapshot.getValue(Integer.class) == null) databaseReference.child("duration").setValue(song.getDurationInSeconds());
+//                        else databaseReference.child("duration").setValue(snapshot.child("duration").getValue(Integer.class) + song.getDurationInSeconds());
+                        }
+                        songCheckCallback.OnSongChecked();
                     }
-                    else{
-                        Log.d("TAG", "Adding to this Playlist");
-                        databaseReference.child("duration").setValue(song.getDurationInSeconds());
-                    }
-                    songCheckCallback.OnSongChecked();
                 }
+                new Handler(Looper.getMainLooper()).postDelayed(addToPlaylistCallback::OnSongAddedToPlaylist, 500);
+
+//                databaseReference.addListenerForSingleValueEvent(new ValueEventListener() {
+//                    @Override
+//                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+//                        if(!isPresent)
+//                        {if(snapshot.child("duration").getValue() == null) databaseReference.child("duration").setValue(song.getDurationInSeconds());
+//                        else databaseReference.child("duration").setValue(snapshot.child("duration").getValue(Integer.class) + song.getDurationInSeconds());}
+//                    }
+//
+//                    @Override
+//                    public void onCancelled(@NonNull DatabaseError error) {
+//
+//                    }
+//                });
             }
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
                 Log.d("TAG", "Error in addListener: " + error.getMessage());
             }
         });
-
-//        if(!isPresent){
-//
-//        }
     }
 }

@@ -69,6 +69,25 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintBottom_toTopOf="@id/recyclerView"/>
 
+            <TextView
+                android:id="@+id/separator"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="  ●  "
+                android:textColor="#BCBCBC"
+                app:layout_constraintStart_toEndOf="@id/numSongs"
+                app:layout_constraintBottom_toTopOf="@id/recyclerView"/>
+
+            <TextView
+                android:id="@+id/playlistDuration"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="2h 3min"
+                android:fontFamily="@font/inter_bold"
+                android:textColor="#BCBCBC"
+                app:layout_constraintStart_toEndOf="@id/separator"
+                app:layout_constraintBottom_toTopOf="@id/recyclerView"/>
+
                 <androidx.recyclerview.widget.RecyclerView
                     android:paddingHorizontal="10dp"
                     android:id="@+id/recyclerView"

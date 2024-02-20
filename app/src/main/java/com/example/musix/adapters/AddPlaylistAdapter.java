@@ -1,5 +1,6 @@
 package com.example.musix.adapters;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -49,8 +50,14 @@ public class AddPlaylistAdapter extends RecyclerView.Adapter<AddPlaylistAdapter.
 
         String textNum = "";
         if(playlists.get(position).getSongs() != null) textNum = playlists.get(position).getSongs().size() + " song";
-        if(playlists.get(position).getSongs().size() > 1) textNum += "s";
-        holder.numTracks.setText(textNum);
+        if(playlists.get(position).getSongs() == null) {
+            Log.d("TAG", "inside AddPlaylist, Songs is NULL!");
+            holder.numTracks.setText("0 tracks");
+        }
+        else{
+            if(playlists.get(position).getSongs().size() > 1) textNum += "s";
+            holder.numTracks.setText(textNum);
+        }
 
         holder.itemView.setOnClickListener(view -> {
             if(onPlaylistClicked != null){
