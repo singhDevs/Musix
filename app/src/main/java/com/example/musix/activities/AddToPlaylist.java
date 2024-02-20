@@ -47,7 +47,7 @@ public class AddToPlaylist extends AppCompatActivity {
 
         Intent intent = getIntent();
         Song song = intent.getParcelableExtra("song");
-
+        if(song == null) Log.d("TAG", "BRUHH, song is null here too!!");
         backBtn = findViewById(R.id.backBtn);
         backBtn.setOnClickListener(view -> {
             finish();
@@ -57,6 +57,7 @@ public class AddToPlaylist extends AppCompatActivity {
         newPlaylistBtn.setOnClickListener(view -> {
             Intent intent1 = new Intent(this, NewPlaylist.class);
             intent1.putExtra("song", (Parcelable) song);
+            if(song == null) Log.d("TAG", "HERE ALSO SONG IS NULL!!");
             startActivity(intent1);
         });
 
@@ -94,8 +95,6 @@ public class AddToPlaylist extends AppCompatActivity {
                 public void OnSongAddedToPlaylist() {
                     finish();
                 }
-
-
             });
         });
 

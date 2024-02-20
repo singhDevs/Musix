@@ -51,7 +51,7 @@ public class CreateNotification {
                     .setLargeIcon(icon)
                     .setOnlyAlertOnce(true)
                     .setShowWhen(false)
-                    .setPriority(NotificationCompat.PRIORITY_HIGH)
+                    .setPriority(NotificationCompat.PRIORITY_DEFAULT)
                     .build();
 
             checkPermission(Manifest.permission.POST_NOTIFICATIONS, 1);

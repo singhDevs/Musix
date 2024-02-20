@@ -62,6 +62,7 @@ public class PlaylistActivity extends AppCompatActivity {
         toolbar.setTitle(playlist.getTitle());
 
         TextView numSongs = findViewById(R.id.numSongs);
+        TextView playlistDuration = findViewById(R.id.playlistDuration);
 
         String numTxt = "";
         if(playlist.getSongs() != null){
@@ -70,6 +71,9 @@ public class PlaylistActivity extends AppCompatActivity {
         }
         else numTxt = "No songs in this Playlist";
         numSongs.setText(numTxt);
+        playlistDuration.setText(formatDuration(playlist.getDuration()));
+        Log.d("TAG", "playlist duration: " + playlist.getDuration());
+        Log.d("TAG", "Formatted playlist duration: " + formatDuration(playlist.getDuration()));
 
         ImageView banner = findViewById(R.id.banner);
         if(playlist != null){
@@ -156,5 +160,18 @@ public class PlaylistActivity extends AppCompatActivity {
             });
             return null;
         }
+    }
+
+    public static String formatDuration(int durationInSeconds) {
+        int hours = durationInSeconds / 3600;
+        int minutes = (durationInSeconds % 3600) / 60;
+
+        StringBuilder formattedDuration = new StringBuilder();
+
+        if (hours > 0) formattedDuration.append(hours).append(" h ");
+        if (minutes > 0 || durationInSeconds == 0) formattedDuration.append(minutes).append(" min ");
+        if(hours == 0) formattedDuration.append(durationInSeconds % 60).append(" sec");
+
+        return formattedDuration.toString();
     }
 }

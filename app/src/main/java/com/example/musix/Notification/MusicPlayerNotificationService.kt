@@ -1,5 +1,6 @@
 package com.example.musix.Notification
 
+import android.app.Notification
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
@@ -12,9 +13,10 @@ import com.example.musix.R
 import com.example.musix.activities.MusicPlayer
 import com.example.musix.models.Song
 
-class MusicPlayerNotificationService(private val context: Context, private val song: Song) {
+open class MusicPlayerNotificationService(private val context: Context, private val song: Song) {
     private val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-    fun showNotification(){
+    private var notification: Notification? = null
+    fun generateNotification(){
         val activityIntent = Intent(context, MusicPlayer::class.java)
         val activityPendingIntent = PendingIntent.getActivity(
             context,
@@ -38,7 +40,7 @@ class MusicPlayerNotificationService(private val context: Context, private val s
         )
         val icon = BitmapFactory.decodeResource(context.resources, R.drawable.musix_notif)
 
-        val notification = NotificationCompat.Builder(context, MUSIC_PLAYER_CHANNEL_ID)
+         notification = NotificationCompat.Builder(context, MUSIC_PLAYER_CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_music_note)
             .setLargeIcon(icon)
             .setContentTitle(song.title)
@@ -52,8 +54,13 @@ class MusicPlayerNotificationService(private val context: Context, private val s
                 nextIntent)
             .build()
 
-        Log.d("TAG", "Notifying now...")
-        notificationManager.notify(1, notification)
+//        Log.d("TAG", "Notifying now...")
+//        notificationManager.notify(1, notification)
+    }
+
+    fun getNotification(): Notification{
+        generateNotification()
+        return notification!!
     }
 
     companion object{

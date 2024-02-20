@@ -515,7 +515,7 @@ public class MusicPlayer extends AppCompatActivity {
         playBtn.setImageResource(R.drawable.ic_pause_filled);
 
         Log.d("TAG", "Calling show Notification");
-        notificationService.showNotification();
+//        notificationService.showNotification();
 //        CreateNotification notification = new CreateNotification(this);
 //        notification.createNotification(this, songList.get(songPosition), R.drawable.ic_pause_filled, songPosition, songList.size() - 1);
     }

@@ -75,7 +75,7 @@ public class NewMusicPlayer extends AppCompatActivity {
     private final BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            Log.d("TAG", "Song Changed Broadcast received");
+            Log.d("broadcast", "Song Changed Broadcast received");
             if(intent.getAction() != null && intent.getAction().equals(MusicService.SONG_CHANGED)){
                 songPosition = intent.getIntExtra("songPosition", 0);
                 Log.d("TAG", "song Position: " + songPosition);
@@ -185,7 +185,8 @@ public class NewMusicPlayer extends AppCompatActivity {
         LinearLayout addToPlaylist = findViewById(R.id.addToPlaylist);
         addToPlaylist.setOnClickListener(view -> {
             Intent intent1 = new Intent(this, AddToPlaylist.class);
-            intent1.putExtra("song", (Parcelable) song);
+            intent1.putExtra("song", (Parcelable) songList.get(songPosition));
+            if(song == null) Log.d("TAG","Lol DEWD");
             startActivity(intent1);
         });
 
@@ -259,6 +260,9 @@ public class NewMusicPlayer extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         unbindService(serviceConnection);
+        if (broadcastReceiver != null) {
+            LocalBroadcastManager.getInstance(this).unregisterReceiver(broadcastReceiver);
+        }
     }
 
     private void setUpMusicService(){
@@ -291,6 +295,9 @@ public class NewMusicPlayer extends AppCompatActivity {
         shuffleStatus = NO_SHUFFLE;
         likeState = NOT_LIKED;
         repeatState = NOT_REPEATED;
+
+        if(musicService == null) Log.d("TAG", "music Service is NULL!");
+        else Log.d("TAG", "music Service is NOT NULL!");
         musicService.setMusicStatus(MusicService.PLAYING_MUSIC);
         musicService.setRepeatStatus(MusicService.NO_SHUFFLE);
         musicService.setShuffleStatus(MusicService.NOT_REPEATED);
@@ -375,6 +382,7 @@ public class NewMusicPlayer extends AppCompatActivity {
     }
 
     private void setBanner(String bannerUrl, RoundedImageView roundedImageView){
+        Log.d("glide", "Glide being called");
         Glide.with(this)
                 .load(bannerUrl)
                 .centerCrop()

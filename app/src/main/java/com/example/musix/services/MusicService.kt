@@ -1,5 +1,6 @@
 package com.example.musix.services
 
+import android.app.NotificationManager
 import android.app.Service
 import android.content.Context
 import android.content.Intent
@@ -15,11 +16,11 @@ import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.SimpleExoPlayer
+import java.io.Serializable
 
 class MusicService(): Service()
 {
     companion object{
-        var isServiceRunning = false
         const val PLAYING_MUSIC: Int = 1
         const val PAUSED_MUSIC: Int = 2
         const val NOT_REPEATED = 0
@@ -29,6 +30,7 @@ class MusicService(): Service()
         const val SHUFFLE = 1
         val song = Song("", "", "", "", "", 0, "", 0)
         const val SONG_CHANGED = "com.example.musix.models.Song"
+        const val PLAYER_PLAYING = "player_ready"
     }
     private var isServiceRunning = false
     private var sameSong = false
@@ -42,9 +44,14 @@ class MusicService(): Service()
     private lateinit var player: ExoPlayer
     private val mBinder: IBinder = LocalBinder(this)
     private var songURL: String = ""
+    private lateinit var notificationManager: NotificationManager
 
     override fun onBind(intent: Intent?): IBinder? {
-        //TODO: need to update notification with new song if new song is played, will see
+        notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val musicPlayerNotificationService = songList[songPosition]?.let { MusicPlayerNotificationService(applicationContext, it) }
+        val notification = musicPlayerNotificationService!!.getNotification()
+        notificationManager.notify(1, notification)
+        startForeground(1, notification)
         return mBinder
     }
 
@@ -57,14 +64,11 @@ class MusicService(): Service()
     override fun onCreate() {
         super.onCreate()
         player = SimpleExoPlayer.Builder(context).build()
+        songList = listOf(song)
         isServiceRunning = true
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-//        when(intent?.action){
-//            Actions.START.toString() -> start()
-//            Actions.STOP.toString() -> stopSelf()
-//        }
         if(intent != null){
             Log.d("TAG", "inside INTENT");
             playlistName = intent.getStringExtra("playlistName").toString() ?: ""
@@ -80,19 +84,12 @@ class MusicService(): Service()
             songList[songPosition]?.let { initializePlayer(it.id) }
             if(!sameSong) songList[songPosition]?.let { initializePlayer(it.id) }
         }
-
-        val notification = NotificationCompat.Builder(this, MusicPlayerNotificationService.MUSIC_PLAYER_CHANNEL_ID)
-            .setSmallIcon(R.drawable.ic_music_note)
-            .setContentTitle(songList[songPosition]?.title)
-            .setContentText(songList[songPosition]?.artist)
-            .build()
-
-//        startForeground(1, notification)
         return START_STICKY
     }
 
     fun fetchData(songList: List<Song?>, songPosition: Int, playlistName: String){
         if(this@MusicService.songList != songList) Log.d("TAG", "songList are not same!!")
+        //TODO: add equality check on songList as well
         //TODO: add equality check on songList as well
         if(this@MusicService.songList[0] != songList[0] && this@MusicService.songPosition == songPosition && this@MusicService.playlistName == playlistName){
             Log.d("TAG", "sameSong set TRUE")
@@ -107,19 +104,6 @@ class MusicService(): Service()
             resetPlayer()
             songList[songPosition]?.let { initializePlayer(it.id) }
         }
-    }
-
-    private fun start(){
-        val notification = NotificationCompat.Builder(this, MusicPlayerNotificationService.MUSIC_PLAYER_CHANNEL_ID)
-            .setSmallIcon(R.drawable.ic_music_note)
-            .setContentTitle(songList[songPosition]?.title)
-            .setContentText(songList[songPosition]?.artist)
-            .build()
-        startForeground(1, notification)
-    }
-
-    enum class Actions{
-        START, STOP
     }
 
     override fun onDestroy() {
@@ -139,6 +123,32 @@ class MusicService(): Service()
                     playNext()
                     notifySongChanged()
                 }
+//                if(playbackState == Player.STATE_READY){
+//                    playerReady();
+//                }
+            }
+
+            override fun onIsPlayingChanged(isPlaying: Boolean) {
+                super.onIsPlayingChanged(isPlaying)
+                if(isPlaying){
+                    Log.d("TAG", "isPlaying True, calling playerPlaying()")
+                    playerPlaying()
+                }
+                else{
+                    Log.d("TAG", "isPlaying False")
+                }
+            }
+
+            private fun playerPlaying() {
+                val intent = Intent(PLAYER_PLAYING)
+                Log.d("TAG", "Player Ready Broadcast sent")
+                intent.putExtra("songTitle", songList[songPosition]!!.title)
+                intent.putExtra("songArtist", songList[songPosition]!!.artist)
+                intent.putExtra("songBanner", songList[songPosition]!!.banner)
+                intent.putExtra("songList",songList as Serializable)
+                intent.putExtra("songPosition", songPosition)
+                intent.putExtra("playlistName", playlistName)
+                LocalBroadcastManager.getInstance(this@MusicService).sendBroadcast(intent)
             }
 
             private fun notifySongChanged() {

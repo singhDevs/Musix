@@ -240,7 +240,7 @@
             android:paddingHorizontal="20dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/guideline2">
+            app:layout_constraintBottom_toTopOf="@id/guideline2">
 
             <ImageView
                 android:id="@+id/volumeIcon"
@@ -268,7 +268,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            app:layout_constraintGuide_percent="0.95" />
+            app:layout_constraintGuide_percent="0.96" />
 
         <androidx.constraintlayout.widget.Guideline
             android:id="@+id/guideline6"
@@ -277,6 +277,38 @@
             android:orientation="vertical"
             app:layout_constraintGuide_begin="20dp" />
 
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/guideline13"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            app:layout_constraintGuide_end="20dp"/>
+        
     </androidx.constraintlayout.widget.ConstraintLayout>
     <include layout="@layout/bottom_sheet_layout"/>
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
+
+
+<!--<com.google.android.material.card.MaterialCardView-->
+<!--android:layout_width="0dp"-->
+<!--android:layout_height="wrap_content"-->
+<!--app:cardCornerRadius="10dp"-->
+<!--app:layout_constraintStart_toStartOf="@id/guideline6"-->
+<!--app:layout_constraintEnd_toEndOf="@id/guideline13"-->
+<!--app:layout_constraintTop_toBottomOf="@id/guideline2"-->
+<!--android:backgroundTint="#4E4E4E"-->
+<!--android:layout_marginTop="10dp"-->
+<!--android:padding="10dp">-->
+<!--<TextView-->
+<!--    android:layout_width="wrap_content"-->
+<!--    android:layout_height="wrap_content"-->
+<!--    android:text="About the Artist"-->
+<!--    android:textColor="@color/white"-->
+<!--    android:fontFamily="@font/inter_bold"-->
+<!--    android:textSize="25sp"/>-->
+<!--<TextView-->
+<!--    android:layout_width="0dp"-->
+<!--    android:layout_height="wrap_content"-->
+<!--    android:textColor="@color/white"-->
+<!--    android:text="Diljit Dosanjh’s achievements over the past two decades are unprecedented and the stature of these remarkable achievements are celebrated through his album GOAT. In Birmingham UK, the Utilita Arena confirmed Diljit is “the highest ever” selling Indian artist there following his sold out show in 2018 at the venue. Fans flock in hoards to witness his extraordinary live shows which have become spectacular once In a lifetime experiences for them, with the grandest levels of production ever witnessed for any solo artist in South Asian concert history! 'Dream Tour, Confidential Tour, Roar Tour just to name a few. His appeal and global popularity further made him become the only turbaned man ever to be made into a wax figure at Madame Tussauds and the first turbaned artist to be featured on the cover of India Vogue!!! Alongside his singing and performing career his popularity skyrocketed further as an actor in films where he set and broke all records for punajbi Films!!! From the years 2011 - 2019 he is credited for having the maximum number of punjabi Films that have shattered opening box office records with films like Jatt and Juliet 1, Jatt and Juliet 2, Sardaarji 1, Sardaarji 2 and Shadaa!! His popularity grew so much in punjabi cinema that it became noticed on a national level with him becoming be first turbaned leading punjabj film actor to act in Hindi Films in lead roles along with megastars like Akshay Kumar, Kareena Kapoor, Shahid Kapoor and Alia Bhatt."/>-->
+<!--</com.google.android.material.card.MaterialCardView>-->

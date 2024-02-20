@@ -33,6 +33,8 @@
                 android:textColor="@color/white"
                 android:textSize="25sp" />
 
+
+
             <Button
                 android:id="@+id/logoutBtn"
                 android:layout_width="wrap_content"
@@ -48,65 +50,99 @@
                 android:layout_height="45dp" />
         </LinearLayout>
 
-        <LinearLayout
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/latestHitsLyt"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
-            android:orientation="vertical"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="@id/guideline3">
 
             <TextView
+                android:id="@+id/latestHitsTxt"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="10dp"
                 android:fontFamily="@font/inter_medium"
                 android:text="@string/latest_hits"
                 android:textColor="@color/white"
-                android:textSize="22sp" />
+                android:textSize="22sp"
+                app:layout_constraintBottom_toTopOf="@id/recyclerLatestHits"
+                app:layout_constraintTop_toTopOf="@id/latestHitsLyt"
+                app:layout_constraintStart_toStartOf="parent"/>
+
+            <TextView
+                android:id="@+id/latestHitsSeeAll"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/see_all"
+                android:fontFamily="@font/inter_medium"
+                android:textColor="#2196F3"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="@id/latestHitsTxt"
+                app:layout_constraintBottom_toTopOf="@id/recyclerLatestHits"/>
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/recyclerLatestHits"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal" />
+                android:orientation="horizontal"
+                app:layout_constraintTop_toBottomOf="@id/latestHitsTxt"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"/>
 
-        </LinearLayout>
+        </androidx.constraintlayout.widget.ConstraintLayout>
 
-        <LinearLayout
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/playlistLyt"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
-            android:orientation="vertical"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toBottomOf="@id/latestHitsLyt">
 
             <TextView
+                android:id="@+id/playlistTxt"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="10dp"
                 android:fontFamily="@font/inter_medium"
                 android:text="@string/playlists"
                 android:textColor="@color/white"
-                android:textSize="22sp" />
+                android:textSize="22sp"
+                app:layout_constraintTop_toTopOf="@id/playlistLyt"
+                app:layout_constraintBottom_toTopOf="@id/recyclerPlaylists"/>
+
+            <TextView
+                android:id="@+id/playlistSeeAll"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/see_all"
+                android:fontFamily="@font/inter_medium"
+                android:textColor="#2196F3"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="@id/playlistLyt"
+                app:layout_constraintBottom_toTopOf="@id/recyclerPlaylists"/>
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/recyclerPlaylists"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal" />
+                android:orientation="horizontal"
+                app:layout_constraintBottom_toBottomOf="@id/playlistLyt"
+                app:layout_constraintTop_toBottomOf="@id/playlistTxt"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"/>
 
-        </LinearLayout>
+        </androidx.constraintlayout.widget.ConstraintLayout>
 
-        <LinearLayout
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/langLyt"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
-            android:orientation="vertical"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toBottomOf="@id/playlistLyt">
@@ -118,16 +154,21 @@
                 android:fontFamily="@font/inter_medium"
                 android:text="Browse by Language"
                 android:textColor="@color/white"
-                android:textSize="22sp" />
+                android:textSize="22sp"
+                app:layout_constraintTop_toTopOf="@id/langLyt"
+                app:layout_constraintBottom_toTopOf="@id/recyclerLanguage"/>
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/recyclerLanguage"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:clipToPadding="false"
-                android:orientation="horizontal" />
+                android:orientation="horizontal"
+                app:layout_constraintBottom_toBottomOf="@id/langLyt"
+                app:layout_constraintStart_toStartOf="@id/langLyt"
+                app:layout_constraintEnd_toEndOf="@id/langLyt"/>
 
-        </LinearLayout>
+        </androidx.constraintlayout.widget.ConstraintLayout>
 
         <androidx.constraintlayout.widget.Guideline
             android:id="@+id/guideline3"
@@ -139,6 +180,12 @@
 
 
 </FrameLayout>
+
+<!--<Button-->
+<!--android:id="@+id/uploadSong"-->
+<!--android:layout_width="wrap_content"-->
+<!--android:layout_height="wrap_content"-->
+<!--android:text="Upload Song"/>-->
 
 <!--<include-->
 <!--android:id="@+id/account_button"-->
