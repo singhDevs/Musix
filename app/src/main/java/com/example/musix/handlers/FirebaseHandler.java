@@ -188,30 +188,24 @@ public class FirebaseHandler {
 
         SongCheckCallback songCheckCallback = () -> {
             Log.d("TAG", "inside SongCheck callback");
-//            if(!isPresent){
-                databaseReference.child("songs").child(song.getKey()).setValue(true).addOnCompleteListener(task -> {
-                    if(task.isSuccessful()){
-                        databaseReference.addListenerForSingleValueEvent(new ValueEventListener() {
-                            @Override
-                            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                                databaseReference.child("duration").setValue(snapshot.child("duration").getValue(Integer.class) + song.getDurationInSeconds());
-//                                if(snapshot.child("duration").getValue() == null) databaseReference.child("duration").setValue(song.getDurationInSeconds());
-//                                else databaseReference.child("duration").setValue(snapshot.child("duration").getValue(Integer.class) + song.getDurationInSeconds());
-                            }
+            databaseReference.child("songs").child(song.getKey()).setValue(true).addOnCompleteListener(task -> {
+                if(task.isSuccessful()){
+                    databaseReference.addListenerForSingleValueEvent(new ValueEventListener() {
 
-                            @Override
-                            public void onCancelled(@NonNull DatabaseError error) {
-
-                            }
-                        });
-                        Toast.makeText(context, "Added to " + playlistName, Toast.LENGTH_SHORT).show();
-                        new Handler(Looper.getMainLooper()).postDelayed(addToPlaylistCallback::OnSongAddedToPlaylist, 500);
-                    }
-                    else{
-                        Log.d("TAG", "error: Key not set in DB. Error: " + task.getException());
-                    }
+                        @Override
+                        public void onDataChange(@NonNull DataSnapshot snapshot) {
+                            databaseReference.child("duration").setValue(snapshot.child("duration").getValue(Integer.class) + song.getDurationInSeconds());
+                        }
+                        @Override
+                        public void onCancelled(@NonNull DatabaseError error) {}
+                    });
+                    Toast.makeText(context, "Added to " + playlistName, Toast.LENGTH_SHORT).show();
+                    new Handler(Looper.getMainLooper()).postDelayed(addToPlaylistCallback::OnSongAddedToPlaylist, 500);
+                }
+                else{
+                    Log.d("TAG", "error: Key not set in DB. Error: " + task.getException());
+                }
                 });
-//            }
         };
 
         databaseReference.child("songs").addListenerForSingleValueEvent(new ValueEventListener() {
@@ -226,31 +220,11 @@ public class FirebaseHandler {
                             isPresent = true;
                         } else {
                             Log.d("TAG", "Adding to this Playlist");
-//                        finalDur[0] += song.getDurationInSeconds();
-//                        if(databaseReference. == null) Log.d("TAG", "SNAPSHOT Dur value NULL!");
-//                        else Log.d("TAG", "SNAPSHOT Dur value NOT NULL!");
-
-//                        if(snapshot.getValue(Integer.class) == null) databaseReference.child("duration").setValue(song.getDurationInSeconds());
-//                        else databaseReference.child("duration").setValue(snapshot.child("duration").getValue(Integer.class) + song.getDurationInSeconds());
                         }
                         songCheckCallback.OnSongChecked();
                     }
                 }
                 new Handler(Looper.getMainLooper()).postDelayed(addToPlaylistCallback::OnSongAddedToPlaylist, 500);
-
-//                databaseReference.addListenerForSingleValueEvent(new ValueEventListener() {
-//                    @Override
-//                    public void onDataChange(@NonNull DataSnapshot snapshot) {
-//                        if(!isPresent)
-//                        {if(snapshot.child("duration").getValue() == null) databaseReference.child("duration").setValue(song.getDurationInSeconds());
-//                        else databaseReference.child("duration").setValue(snapshot.child("duration").getValue(Integer.class) + song.getDurationInSeconds());}
-//                    }
-//
-//                    @Override
-//                    public void onCancelled(@NonNull DatabaseError error) {
-//
-//                    }
-//                });
             }
             @Override
             public void onCancelled(@NonNull DatabaseError error) {

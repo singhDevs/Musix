@@ -96,7 +96,7 @@ public class PlaylistActivity extends AppCompatActivity {
         recyclerView.setLayoutManager(layoutManager);
 
         PlaylistActivityAdapter.OnPlaylistClickListener onPlaylistClickListener = (songList, position) -> {
-            Intent intent = new Intent(this, MusicPlayer.class);
+            Intent intent = new Intent(this, NewMusicPlayer.class);
             intent.putExtra("source", "internet");
             intent.putExtra("song", (Parcelable) songList.get(position));
             intent.putExtra("songList", (Serializable) songList);
@@ -117,7 +117,7 @@ public class PlaylistActivity extends AppCompatActivity {
 
         playBtn = findViewById(R.id.playBtn);
         playBtn.setOnClickListener(view -> {
-            Intent intent = new Intent(this, MusicPlayer.class);
+            Intent intent = new Intent(this, NewMusicPlayer.class);
             intent.putExtra("source", "internet");
             intent.putExtra("song", (Parcelable) songs.get(0));
             intent.putExtra("songList", (Serializable) songs);

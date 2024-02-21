@@ -89,6 +89,7 @@ class MusicService(): Service()
 
     fun fetchData(songList: List<Song?>, songPosition: Int, playlistName: String){
         if(this@MusicService.songList != songList) Log.d("TAG", "songList are not same!!")
+        else Log.d("TAG", "songList are same!!")
         //TODO: add equality check on songList as well
         //TODO: add equality check on songList as well
         if(this@MusicService.songList[0] != songList[0] && this@MusicService.songPosition == songPosition && this@MusicService.playlistName == playlistName){

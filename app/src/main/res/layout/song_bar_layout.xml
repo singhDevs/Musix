@@ -29,7 +29,7 @@
 
         <TextView
             android:id="@+id/songTitle"
-            android:layout_width="wrap_content"
+            android:layout_width="227dp"
             android:layout_height="wrap_content"
             android:fontFamily="@font/inter_semibold"
             android:includeFontPadding="false"
@@ -46,7 +46,7 @@
 
         <TextView
             android:id="@+id/songArtist"
-            android:layout_width="wrap_content"
+            android:layout_width="227dp"
             android:layout_height="wrap_content"
             android:includeFontPadding="false"
             android:marqueeRepeatLimit="marquee_forever"

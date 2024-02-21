@@ -61,29 +61,34 @@ public class FilesFragment extends Fragment{
     public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
+        List<Song> songList = new ArrayList<>();
         if(requestCode == PICK_AUDIO_REQUEST_CODE && resultCode == RESULT_OK && data != null){
             Uri audioUri = data.getData();
-            Song song = null;
 
-            new FetchMetaDataTask(song1 -> {
-                List<Song> songList = new ArrayList<>();
-                songList.add(song1);
+            new FetchMetaDataTask(song -> {
+                song.setId(String.valueOf(audioUri));
+                songList.clear();
+                songList.add(song);
 
-                if(song1 == null) Log.d("TAG", "song1 is NULL");
-                else Log.d("TAG", "song1 is not NULL");
+                if(song == null) Log.d("local", "song1 is NULL");
+                else Log.d("local", "song1 is not NULL");
 
-//                if(song1.getId() != null) Log.d("TAG", " SONG URL: " + song.getId());
-//                else Log.d("TAG", "SONG URL IS NULL!");
+                if(song.getId() != null) Log.d("local", " SONG URL: " + song.getId());
+                else Log.d("local", "SONG URL IS NULL!");
+
+                for(Song songItem : songList){
+                    Log.d("local", "song title: " + songItem.getTitle());
+                }
 
                 Intent intent = new Intent(getContext(), NewMusicPlayer.class);
-                intent.putExtra("song", (Parcelable) song1);
-                intent.putExtra("songUrl", song1.getId());
+                intent.putExtra("song", (Parcelable) song);
+                intent.putExtra("songUrl", song.getId());
                 intent.putExtra("songList", (Serializable) songList);
                 intent.putExtra("playlistName", "Files");
                 intent.putExtra("currentUser", FirebaseAuth.getInstance().getCurrentUser().getUid());
                 Log.d("TAG", "Files SongList size: " + songList.size());
                 intent.putExtra("songPosition", 0);
-//                Log.d("TAG", "song from File: Title: " + song.getTitle() + "\tArtist: " + song.getArtist());
+                Log.d("local", "song from File: Title: " + song.getTitle() + "\tArtist: " + song.getArtist());
                 startActivity(intent);
             }, audioUri).execute();
         }
