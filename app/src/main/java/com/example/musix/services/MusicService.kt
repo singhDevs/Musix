@@ -28,7 +28,7 @@ class MusicService(): Service()
         const val REPEAT_ONE = 2
         const val NO_SHUFFLE = 0
         const val SHUFFLE = 1
-        val song = Song("", "", "", "", "", 0, "", 0)
+        val song = Song("", "", "", "", "", 0, "", 0, "")
         const val SONG_CHANGED = "com.example.musix.models.Song"
         const val PLAYER_PLAYING = "player_ready"
     }
@@ -88,23 +88,43 @@ class MusicService(): Service()
     }
 
     fun fetchData(songList: List<Song?>, songPosition: Int, playlistName: String){
+        Log.d("TAG", "fetchData called...");
         if(this@MusicService.songList != songList) Log.d("TAG", "songList are not same!!")
         else Log.d("TAG", "songList are same!!")
         //TODO: add equality check on songList as well
         //TODO: add equality check on songList as well
-        if(this@MusicService.songList[0] != songList[0] && this@MusicService.songPosition == songPosition && this@MusicService.playlistName == playlistName){
-            Log.d("TAG", "sameSong set TRUE")
-            sameSong = true
-        }
-        else{
-            Log.d("TAG", "\n\nsameSong set FALSE")
-            sameSong = false
+        // need not to reinitialize already playing song in song bar
+        // need to check if the song playing is the same song clicked...
+        if(this@MusicService.songList[this@MusicService.songPosition]?.key != songList[songPosition]?.key){
+            Log.d("TAG", "Key NOT SAME, reinitializing player...");
             this@MusicService.songList = songList
             this@MusicService.songPosition = songPosition
             this@MusicService.playlistName = playlistName
             resetPlayer()
             songList[songPosition]?.let { initializePlayer(it.id) }
         }
+        else{
+            Log.d("TAG", "Key is SAME, song continues to play...");
+        }
+//        if(this@MusicService.songList[0] != songList[0] && this@MusicService.songPosition == songPosition && this@MusicService.playlistName == playlistName){
+//            Log.d("TAG", "sameSong set TRUE")
+//            // temporary provision
+//            this@MusicService.songList = songList
+//            this@MusicService.songPosition = songPosition
+//            this@MusicService.playlistName = playlistName
+//            resetPlayer()
+//            songList[songPosition]?.let { initializePlayer(it.id) }
+//            sameSong = true
+//        }
+//        else{
+//            Log.d("TAG", "\n\nsameSong set FALSE")
+//            sameSong = false
+//            this@MusicService.songList = songList
+//            this@MusicService.songPosition = songPosition
+//            this@MusicService.playlistName = playlistName
+//            resetPlayer()
+//            songList[songPosition]?.let { initializePlayer(it.id) }
+//        }
     }
 
     override fun onDestroy() {
@@ -113,14 +133,17 @@ class MusicService(): Service()
     }
 
     private fun initializePlayer(songUri: String) {
-        Log.d("TAG", "Initializing Player")
+        Log.d("TAG", "------------------------Initializing Player------------------------")
+        Log.d("TAG", "Song Pos: " + songPosition + "\t\tSong: " + songList.get(songPosition)?.title)
         val mediaItem = MediaItem.fromUri(songUri)
 
         player.setMediaItem(mediaItem)
         player.addListener(object : Player.Listener{
             override fun onPlaybackStateChanged(playbackState: Int) {
                 super.onPlaybackStateChanged(playbackState)
+                Log.d("TAG", "ALERT:\t\tPlayback State: " + playbackState.toString())
                 if(playbackState == Player.STATE_ENDED){
+                    Log.d("TAG", "ALERT6: calling playNext()")
                     playNext()
                     notifySongChanged()
                 }
@@ -152,15 +175,11 @@ class MusicService(): Service()
                 LocalBroadcastManager.getInstance(this@MusicService).sendBroadcast(intent)
             }
 
-            private fun notifySongChanged() {
-                val intent = Intent(SONG_CHANGED)
-                Log.d("TAG", "Song Changed Broadcast sent, songPos: " + songPosition)
-                intent.putExtra("songPosition", songPosition)
-                LocalBroadcastManager.getInstance(this@MusicService).sendBroadcast(intent)
-            }
+
         })
         player.prepare()
         player.play()
+        Log.d("TAG", "------------------------initialize player ends------------------------")
     }
 
     fun playMusic(){
@@ -170,6 +189,14 @@ class MusicService(): Service()
         Log.d("TAG", "PLaying music from Service")
     }
 
+    public fun notifySongChanged() {
+        val intent = Intent(SONG_CHANGED)
+        Log.d("TAG", "inside notif, songPos: " + songPosition)
+        Log.d("TAG", "Song Changed Broadcast sent, songPos: " + songPosition)
+        intent.putExtra("songPosition", songPosition)
+        LocalBroadcastManager.getInstance(this@MusicService).sendBroadcast(intent)
+    }
+
     fun pauseMusic(){
         player.pause()
         Log.d("TAG", "Music Paused in Service")
@@ -177,7 +204,8 @@ class MusicService(): Service()
 
     fun playNext(){
 //        initializePlayer(songUri)
-
+        Log.d("TAG", "ALERTSHUFFLE: " + shuffleStatus)
+        Log.d("TAG", "REPEATSTATUS: " + repeatStatus)
         if (repeatStatus == REPEAT) {
             if (shuffleStatus == SHUFFLE) {
                 resetPlayer()
@@ -186,15 +214,19 @@ class MusicService(): Service()
                     randomPosition = (Math.random() * songList.size + 0).toInt()
                 }
                 songPosition = randomPosition
+
+                Log.d("TAG", "ALERT1: init player using songPos: " + songPosition)
                 songList[songPosition]?.let { initializePlayer(it.id) }
 //                    setUpUI(songList[songPosition])
             } else {
                 if (songPosition < songList.size - 1) {
                     resetPlayer()
+                    Log.d("TAG", "ALERT2: init player using songPos: " + (songPosition + 1))
                     songList[++songPosition]?.let { initializePlayer(it.id) }
 //                        setUpUI(songList[songPosition])
                 } else {
                     resetPlayer()
+                    Log.d("TAG", "ALERT3: init player using songPos: " + 0)
                     songList[0]?.let { initializePlayer(it.id) }
 //                        setUpUI(songList[0])
                     songPosition = 0
@@ -211,11 +243,13 @@ class MusicService(): Service()
                     randomPosition = (Math.random() * songList.size + 0).toInt()
                 }
                 songPosition = randomPosition
+                Log.d("TAG", "ALERT4: init player using songPos: " + songPosition)
                 songList[songPosition]?.let { initializePlayer(it.id) }
 //                    setUpUI(songList[songPosition])
             } else {
                 if (songPosition < songList.size - 1) {
                     resetPlayer()
+                    Log.d("TAG", "ALERT5: init player using songPos: " + (songPosition + 1))
                     songList[++songPosition]?.let { initializePlayer(it.id) }
 //                        setUpUI(songList[songPosition])
                 } else {

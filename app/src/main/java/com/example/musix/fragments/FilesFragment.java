@@ -64,6 +64,7 @@ public class FilesFragment extends Fragment{
         List<Song> songList = new ArrayList<>();
         if(requestCode == PICK_AUDIO_REQUEST_CODE && resultCode == RESULT_OK && data != null){
             Uri audioUri = data.getData();
+//            String key = audioUri.toString();
 
             new FetchMetaDataTask(song -> {
                 song.setId(String.valueOf(audioUri));
@@ -124,7 +125,8 @@ public class FilesFragment extends Fragment{
                     + '/' + getResources().getResourceEntryName(drawableResourceId));
 
             String id = uri.toString();
-            String key = "";
+            String key = uri.toString();
+            Log.d("TAG", "\n\nKEY IS: " + key + "\n\n");
             String banner = String.valueOf(drawableUri);
             String title = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE);
             String artist = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST);
@@ -143,7 +145,7 @@ public class FilesFragment extends Fragment{
             if(title == null){
                 title = "Unknown Audio";
             }
-            return new Song(id, key, banner, title, artist, duration, album, year);
+            return new Song(id, key, banner, title, artist, duration, album, year, "");
         }
 
         @Override

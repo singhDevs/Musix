@@ -89,7 +89,7 @@ public class NewPlaylist extends AppCompatActivity {
                 Log.d("TAG", "song Key: " + song.getKey());
                 songHashMap.put(song.getKey(), true);
             }
-            Playlist playlist = new Playlist(0, playlistName, FirebaseAuth.getInstance().getCurrentUser().getDisplayName(), 0, songHashMap);
+            Playlist playlist = new Playlist("", playlistName, FirebaseAuth.getInstance().getCurrentUser().getDisplayName(), 0, songHashMap);
 
             Log.d("TAG", playlist.getSongs().toString());
             DatabaseReference newPlaylist = databaseReference.child(playlistName);

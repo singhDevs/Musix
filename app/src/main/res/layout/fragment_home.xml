@@ -8,11 +8,15 @@
     android:padding="10dp"
     android:background="@color/bg_primary">
 
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fillViewport="true">
+
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:scrollbars="none">
-
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -26,7 +30,6 @@
                 android:id="@+id/greetingTxt"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="10dp"
                 android:layout_weight="1"
                 android:fontFamily="@font/inter_black"
                 android:text="Good Evening, user"
@@ -34,6 +37,12 @@
                 android:textSize="25sp" />
 
 
+            <Button
+                android:id="@+id/uploadSong"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Upload Song"
+                android:visibility="gone"/>
 
             <Button
                 android:id="@+id/logoutBtn"
@@ -63,7 +72,6 @@
                 android:id="@+id/latestHitsTxt"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="10dp"
                 android:fontFamily="@font/inter_medium"
                 android:text="@string/latest_hits"
                 android:textColor="@color/white"
@@ -169,7 +177,6 @@
                 app:layout_constraintEnd_toEndOf="@id/langLyt"/>
 
         </androidx.constraintlayout.widget.ConstraintLayout>
-
         <androidx.constraintlayout.widget.Guideline
             android:id="@+id/guideline3"
             android:layout_width="wrap_content"
@@ -177,15 +184,9 @@
             android:orientation="horizontal"
             app:layout_constraintGuide_percent="0.09" />
     </androidx.constraintlayout.widget.ConstraintLayout>
-
+    </androidx.core.widget.NestedScrollView>
 
 </FrameLayout>
-
-<!--<Button-->
-<!--android:id="@+id/uploadSong"-->
-<!--android:layout_width="wrap_content"-->
-<!--android:layout_height="wrap_content"-->
-<!--android:text="Upload Song"/>-->
 
 <!--<include-->
 <!--android:id="@+id/account_button"-->

@@ -21,7 +21,6 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -37,6 +36,7 @@ import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.button.MaterialButton;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
@@ -108,6 +108,8 @@ public class MainActivity extends AppCompatActivity {
         songTxtTitle.setSelected(true);
         songTxtArtist.setSelected(true);
 
+
+
         songBar.setOnClickListener(v -> {
             Intent intent = new Intent(this, NewMusicPlayer.class);
             intent.putExtra("songTitle", songList.get(songPosition).getTitle());
@@ -167,31 +169,31 @@ public class MainActivity extends AppCompatActivity {
                 int itemId = item.getItemId();
                 FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
 
-                if(itemId == R.id.navHome){
+                if(itemId == R.id.nav_home){
                     if(!loadedFragment){
-                        fragmentTransaction.add(R.id.container, new HomeFragment());
+                        fragmentTransaction.add(R.id.fragment_container, new HomeFragment());
                         loadedFragment = true;
                     }
                     else {
-                        fragmentTransaction.replace(R.id.container, new HomeFragment());
+                        fragmentTransaction.replace(R.id.fragment_container, new HomeFragment());
                     }
                 }
-                if(itemId == R.id.navSearch) {
+                if(itemId == R.id.nav_search) {
                     if(!loadedFragment){
-                        fragmentTransaction.add(R.id.container, new SearchFragment());
+                        fragmentTransaction.add(R.id.fragment_container, new SearchFragment());
                         loadedFragment = true;
                     }
                     else{
-                        fragmentTransaction.replace(R.id.container, new SearchFragment());
+                        fragmentTransaction.replace(R.id.fragment_container, new SearchFragment());
                     }
                 }
-                if(itemId == R.id.navFiles){
+                if(itemId == R.id.nav_files){
                     if(!loadedFragment){
-                        fragmentTransaction.add(R.id.container, new FilesFragment());
+                        fragmentTransaction.add(R.id.fragment_container, new FilesFragment());
                         loadedFragment = true;
                     }
                     else{
-                        fragmentTransaction.replace(R.id.container, new FilesFragment());
+                        fragmentTransaction.replace(R.id.fragment_container, new FilesFragment());
                     }
                 }
                 fragmentTransaction.commit();
@@ -201,7 +203,7 @@ public class MainActivity extends AppCompatActivity {
 
         HomeFragment homeFragment = new HomeFragment();
 
-        fragmentTransaction.replace(R.id.container, homeFragment);
+        fragmentTransaction.replace(R.id.fragment_container, homeFragment);
         fragmentTransaction.commit();
     }
 

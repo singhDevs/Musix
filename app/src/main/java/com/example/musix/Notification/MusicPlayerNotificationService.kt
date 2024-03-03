@@ -34,18 +34,30 @@ open class MusicPlayerNotificationService(private val context: Context, private 
 
         val nextIntent = PendingIntent.getBroadcast(
             context,
-            2,
+            3,
             Intent(context, NextMusicNotificationReceiver::class.java),
+            if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) PendingIntent.FLAG_IMMUTABLE else 0
+        )
+
+        val prevIntent = PendingIntent.getBroadcast(
+            context,
+            4,
+            Intent(context, PrevMusicNotificationReceiver::class.java),
             if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) PendingIntent.FLAG_IMMUTABLE else 0
         )
         val icon = BitmapFactory.decodeResource(context.resources, R.drawable.musix_notif)
 
+        Log.d("notif", "song.title: " + song.title)
+        Log.d("notif", "song.artist: " + song.artist)
          notification = NotificationCompat.Builder(context, MUSIC_PLAYER_CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_music_note)
             .setLargeIcon(icon)
             .setContentTitle(song.title)
             .setContentText(song.artist)
             .setContentIntent(activityPendingIntent)
+            .addAction(R.drawable.ic_previous,
+                "Prev",
+                prevIntent)
             .addAction(R.drawable.ic_play_arrow,
                 "Play",
                 playIntent)
@@ -53,9 +65,6 @@ open class MusicPlayerNotificationService(private val context: Context, private 
                 "Next",
                 nextIntent)
             .build()
-
-//        Log.d("TAG", "Notifying now...")
-//        notificationManager.notify(1, notification)
     }
 
     fun getNotification(): Notification{

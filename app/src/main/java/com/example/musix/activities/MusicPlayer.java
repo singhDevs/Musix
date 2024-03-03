@@ -209,7 +209,7 @@ public class MusicPlayer extends AppCompatActivity {
             if(likeState == NOT_LIKED){
                 likeBtn.setImageResource(R.drawable.heart_filled);
                 likeState = LIKED;
-                Playlist likedPlaylist = new Playlist(0, "Liked Songs", FirebaseAuth.getInstance().getCurrentUser().getDisplayName(), 0, new HashMap<>());
+                Playlist likedPlaylist = new Playlist("", "Liked Songs", FirebaseAuth.getInstance().getCurrentUser().getDisplayName(), 0, new HashMap<>());
                 FirebaseHandler.addLikedSong(getApplicationContext(), likedPlaylist, uid, songList.get(songPosition));
             }
             else{

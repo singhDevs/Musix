@@ -7,6 +7,7 @@ import android.os.Bundle;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -27,6 +28,7 @@ import com.example.musix.activities.Login;
 import com.example.musix.activities.NewMusicPlayer;
 import com.example.musix.activities.PlaylistActivity;
 import com.example.musix.activities.SeeAllActivtiy;
+import com.example.musix.adapters.LanguageAdapter;
 import com.example.musix.adapters.LatestHitsAdapter;
 import com.example.musix.adapters.PlaylistsAdapter;
 import com.example.musix.callbacks.PlaylistCallback;
@@ -60,6 +62,7 @@ public class HomeFragment extends Fragment {
     List<Playlist> songsByLanguageList = new ArrayList<>();
     LatestHitsAdapter latestHitsAdapter;
     PlaylistsAdapter playlistsAdapter;
+    LanguageAdapter languageAdapter;
     TextView greetingTxt, latestHitsSeeAll, playlistSeeAll;
     GoogleSignInOptions gso;
     private Button logoutBtn, uploadSong;
@@ -75,13 +78,13 @@ public class HomeFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_home, container, false);
 
 
-//        uploadSong = view.findViewById(R.id.uploadSong);
-//        uploadSong.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                uploadSong();
-//            }
-//        });
+        uploadSong = view.findViewById(R.id.uploadSong);
+        uploadSong.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                uploadSong();
+            }
+        });
 
         account = GoogleSignIn.getLastSignedInAccount(getContext());
         gso = GoogleSignInHelper.getSignInOptions(getContext());
@@ -189,14 +192,41 @@ public class HomeFragment extends Fragment {
 
 
         //Browse By Language Recycler
+        languageRecycler = view.findViewById(R.id.recyclerLanguage);
+        GridLayoutManager layoutManager2 = new GridLayoutManager(getContext(), 2);
+        languageRecycler.setLayoutManager(layoutManager2);
+
 //        songsByLanguageList.add(new Playlist(R.drawable.img, "Punjabi", "Musix", 9000, new HashMap<>()) );
 //        languageRecycler = view.findViewById(R.id.recyclerLanguage);
 //
 //        GridLayoutManager layoutManager2 = new GridLayoutManager(getContext(), 3);
 //        languageRecycler.setLayoutManager(layoutManager2);
-//
-//        PlaylistsAdapter languageAdapter = new PlaylistsAdapter(songsByLanguageList);
-//        languageRecycler.setAdapter(languageAdapter);
+
+        LanguageAdapter.OnPlaylistClicked onPlaylistClicked1 = playlist -> {
+            Intent intent = new Intent(getContext(), PlaylistActivity.class);
+            intent.putExtra("playlist", (Parcelable) playlist);
+            if(playlist == null) Log.d("TAG", "in Home Fragment, playlist is null!");
+            else {
+                if(playlist.getSongs() == null){
+                    Log.d("TAG", "in Home Fragment, playlist songs is NULL!");
+                    playlist.setSongs(new HashMap<>());
+                }
+                else{
+                    Log.d("TAG", "in Home Fragment, playlist is NOT null! size: " + playlist.getSongs().size());
+                    for(Map.Entry<String, Boolean> entry : playlist.getSongs().entrySet()){
+                        Log.d("TAG", "key: " + entry.getKey() + "\t\tValue: " + entry.getValue());
+                    }
+                }
+            }
+            startActivity(intent);
+        };
+        languageAdapter = new LanguageAdapter(getContext(), songsByLanguageList, onPlaylistClicked1);
+
+        languageRecycler.setAdapter(languageAdapter);
+        new GetLangPlaylistTask(playlists -> {
+//                Log.d("TAG", "after fetching is done, title: " + playlists.get(0).getTitle());
+//                Log.d("TAG", "after fetching is done, songMap: " + playlists.get(0).getSongs());
+        }).execute();
 
         return view;
     }
@@ -226,9 +256,9 @@ public class HomeFragment extends Fragment {
     }
 
     public void uploadSong() {
-        Song song = new Song("", "", "", "Arrogant", "AP Dhillon", 102, "NA", 2020);
-        int uri = getContext().getResources().getIdentifier("arrogant", "raw", getContext().getPackageName());
-        int bannerUri = getContext().getResources().getIdentifier("arrogant_bg", "raw", getContext().getPackageName());
+        Song song = new Song("", "", "", "In the End", "Linkin Park", 216, "Hybrid Theory", 2000, "english");
+        int uri = getContext().getResources().getIdentifier("linkinpark", "raw", getContext().getPackageName());
+        int bannerUri = getContext().getResources().getIdentifier("linkinpark_bg", "raw", getContext().getPackageName());
 
         Log.d("TAG", "Song File URI: " + uri);
         FirebaseHandler.uploadSongData(song, uri, bannerUri, getContext());
@@ -323,10 +353,56 @@ public class HomeFragment extends Fragment {
         }
     }
 
+    private class GetLangPlaylistTask extends AsyncTask<Void, Void, List<Playlist>>{
+        private final PlaylistCallback playlistCallback;
+
+        private GetLangPlaylistTask(PlaylistCallback playlistCallback) {
+            this.playlistCallback = playlistCallback;
+        }
+
+        @Override
+        protected List<Playlist> doInBackground(Void... voids) {return fetchLangPlaylists();}
+        private List<Playlist> fetchLangPlaylists() {
+            Log.d("TAG", "entered fetchPlaylists");
+            DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference()
+                    .child("musix")
+                    .child("language");
+            List<Playlist> playlistList = new ArrayList<>();
+            databaseReference.addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot snapshot) {
+                    for(DataSnapshot dataSnapshot : snapshot.getChildren()){
+                        Playlist playlist = dataSnapshot.getValue(Playlist.class);
+                        Log.d("playlist", "playlist title: " + playlist.getTitle());
+                        playlistList.add(playlist);
+                    }
+                    songsByLanguageList.clear();
+                    songsByLanguageList.addAll(playlistList);
+                    languageAdapter.notifyDataSetChanged();
+
+                    Log.d("TAG", "Fetched Playlists");
+                    for(Playlist playlist : songsByLanguageList){
+                        Log.d("TAG", "title: " + playlist.getTitle());
+                        Log.d("TAG", "banner: " + playlist.getBanner());
+                        Log.d("TAG", "creator: " + playlist.getCreator());
+                        Log.d("TAG", "duration: " + playlist.getDuration());
+                        Log.d("TAG", "songMap: " + playlist.getSongs());
+                    }
+                    playlistCallback.onPlaylistsFetched(playlistList);
+                }
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError error) {
+                    Toast.makeText(getContext(), "Error fetching data: " + error.getMessage(), Toast.LENGTH_SHORT).show();
+                    Log.d("TAG", "Error fetching data: " + error.getMessage());
+                }
+            });
+            return playlistList;
+        }
+    }
+
     public void signOut() {
-        // [START auth_sign_out]
         FirebaseAuth.getInstance().signOut();
         GoogleSignIn.getClient(getContext(), gso).signOut();
-        // [END auth_sign_out]
     }
 }

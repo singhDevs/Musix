@@ -47,13 +47,13 @@ public class FirebaseHandler {
             else{
                 Toast.makeText(context, "Song uploaded", Toast.LENGTH_LONG).show();
                 Log.d("TAG", "Song Data uploaded, now uploading Song File...");
-                uploadSong(stream, bannerUri, context);
+                uploadSong(song, stream, bannerUri, context);
             }
             return Tasks.forResult(null);
         });
     }
 
-    public static Task<Uri> uploadSong(InputStream inputStream, int bannerUri, Context context){
+    public static Task<Uri> uploadSong(Song song, InputStream inputStream, int bannerUri, Context context){
         FirebaseStorage storage = FirebaseStorage.getInstance();
         StorageReference storageReference = storage.getReference().child("songs/" + System.currentTimeMillis() + ".mp3");
 
@@ -70,7 +70,7 @@ public class FirebaseHandler {
         }).continueWithTask(songUriTask -> {
             Uri songURI = songUriTask.getResult();
             InputStream stream = context.getResources().openRawResource(bannerUri);
-            return uploadBanner(stream, context, storageReference.getDownloadUrl().toString());
+            return uploadBanner(song, stream, context, storageReference.getDownloadUrl().toString());
         }).addOnSuccessListener(uri -> {
             Log.d("TAG", "Banner file uploaded successfully!");
         }).addOnFailureListener(e -> {
@@ -78,11 +78,13 @@ public class FirebaseHandler {
         });
     }
 
-    public static Task<Uri> uploadBanner(InputStream inputStream, Context context, String songUrl){
+    public static Task<Uri> uploadBanner(Song song, InputStream inputStream, Context context, String songUrl){
         Log.d("TAG", "entered uploadBanner");
         FirebaseStorage storage = FirebaseStorage.getInstance();
         Log.d("TAG", "banner name: " + songUrl);
         StorageReference reference = storage.getReference().child("banner/" + songUrl + ".jpg");
+
+        DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference().child("musix").child("language");
 
         UploadTask uploadTask = reference.putStream(inputStream);
         return uploadTask.continueWithTask(task -> {
@@ -92,6 +94,16 @@ public class FirebaseHandler {
             }
             else{
                 Log.d("TAG", "banner file uploaded!");
+                Log.d("TAG", "song uploading to lang playlist...");
+//                databaseReference.child(song.getLanguage()).child("songs").child("duration").setValue();
+//                databaseReference.child(song.getLanguage()).child("songs").child(song.getKey()).setValue(true).addOnCompleteListener(task1 -> {
+//                    if(task1.isSuccessful()){
+//                        Log.d("TAG", "song uploaded to lang playlist!");
+//                    }
+//                    else{
+//                        Log.e("TAG", "Error: " + task.getException());
+//                    }
+//                });
             }
             return reference.getDownloadUrl();
         });

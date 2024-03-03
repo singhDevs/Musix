@@ -108,6 +108,7 @@ public class NewMusicPlayer extends AppCompatActivity {
         IntentFilter filter = new IntentFilter(MusicService.SONG_CHANGED);
         LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver, filter);
 
+        Log.d("TAG", "calling 3 functions...");
         fetchIntentData();
         initializeUI();
         setUpMusicService();
@@ -121,15 +122,21 @@ public class NewMusicPlayer extends AppCompatActivity {
             else if(musicStatus == PLAYING_MUSIC) pauseMusic();
         });
 
-//        nextBtn.setOnClickListener(view -> playNext());
-//        prevBtn.setOnClickListener(view -> playPrev());
+        nextBtn.setOnClickListener(view -> {
+            musicService.playNext();
+            musicService.notifySongChanged();
+        });
+        prevBtn.setOnClickListener(view -> {
+            musicService.playPrev();
+            musicService.notifySongChanged();
+        });
 
         likeBtn.setOnClickListener(view -> {
             //TODO: load Liked Playlist on Login
             if(likeState == NOT_LIKED){
                 likeBtn.setImageResource(R.drawable.heart_filled);
                 likeState = LIKED;
-                Playlist likedPlaylist = new Playlist(0, "Liked Songs", FirebaseAuth.getInstance().getCurrentUser().getDisplayName(), 0, new HashMap<>());
+                Playlist likedPlaylist = new Playlist("", "Liked Songs", FirebaseAuth.getInstance().getCurrentUser().getDisplayName(), 0, new HashMap<>());
                 FirebaseHandler.addLikedSong(getApplicationContext(), likedPlaylist, uid, songList.get(songPosition));
             }
             else{
@@ -273,6 +280,7 @@ public class NewMusicPlayer extends AppCompatActivity {
     }
 
     private void fetchIntentData(){
+        Log.d("TAG", "inside fetch Intent Data");
         Intent intent = getIntent();
         songList = (List<Song>) intent.getSerializableExtra("songList");
         songPosition = intent.getIntExtra("songPosition", 0);
@@ -283,6 +291,7 @@ public class NewMusicPlayer extends AppCompatActivity {
     }
 
     private void initializeUI(){
+        Log.d("TAG", "inside initialize UI");
         playlistName = findViewById(R.id.playlistName);
         songTitle = findViewById(R.id.songTitle);
         songArtist = findViewById(R.id.songArtist);
