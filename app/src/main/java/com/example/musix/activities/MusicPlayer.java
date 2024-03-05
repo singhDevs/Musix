@@ -26,6 +26,7 @@ import android.widget.Toast;
 import com.bumptech.glide.Glide;
 import com.example.musix.Notification.MusicPlayerNotificationService;
 import com.example.musix.R;
+import com.example.musix.application.RunningApp;
 import com.example.musix.handlers.FirebaseHandler;
 import com.example.musix.models.Playlist;
 import com.example.musix.models.Song;
@@ -209,13 +210,13 @@ public class MusicPlayer extends AppCompatActivity {
             if(likeState == NOT_LIKED){
                 likeBtn.setImageResource(R.drawable.heart_filled);
                 likeState = LIKED;
-                Playlist likedPlaylist = new Playlist(0, "Liked Songs", FirebaseAuth.getInstance().getCurrentUser().getDisplayName(), 0, new HashMap<>());
-                FirebaseHandler.addLikedSong(getApplicationContext(), likedPlaylist, uid, songList.get(songPosition));
+                Playlist likedPlaylist = new Playlist("", "Liked Songs", FirebaseAuth.getInstance().getCurrentUser().getDisplayName(), 0, new HashMap<>());
+                FirebaseHandler.addLikedSong(getApplicationContext(), likedPlaylist, uid, songList.get(songPosition), new RunningApp());
             }
             else{
                 likeBtn.setImageResource(R.drawable.heart_outline);
                 likeState = NOT_LIKED;
-                FirebaseHandler.removeLikedSong(getApplicationContext(), uid, songList.get(songPosition));
+                FirebaseHandler.removeLikedSong(getApplicationContext(), uid, songList.get(songPosition), new RunningApp());
             }
         });
 

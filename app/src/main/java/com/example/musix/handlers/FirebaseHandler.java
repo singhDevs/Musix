@@ -2,6 +2,7 @@ package com.example.musix.handlers;
 
 import android.content.Context;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
@@ -9,6 +10,7 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 
+import com.example.musix.application.RunningApp;
 import com.example.musix.callbacks.AddToPlaylistCallback;
 import com.example.musix.callbacks.SongCheckCallback;
 import com.example.musix.models.Playlist;
@@ -47,13 +49,13 @@ public class FirebaseHandler {
             else{
                 Toast.makeText(context, "Song uploaded", Toast.LENGTH_LONG).show();
                 Log.d("TAG", "Song Data uploaded, now uploading Song File...");
-                uploadSong(stream, bannerUri, context);
+                uploadSong(song, stream, bannerUri, context);
             }
             return Tasks.forResult(null);
         });
     }
 
-    public static Task<Uri> uploadSong(InputStream inputStream, int bannerUri, Context context){
+    public static Task<Uri> uploadSong(Song song, InputStream inputStream, int bannerUri, Context context){
         FirebaseStorage storage = FirebaseStorage.getInstance();
         StorageReference storageReference = storage.getReference().child("songs/" + System.currentTimeMillis() + ".mp3");
 
@@ -70,7 +72,7 @@ public class FirebaseHandler {
         }).continueWithTask(songUriTask -> {
             Uri songURI = songUriTask.getResult();
             InputStream stream = context.getResources().openRawResource(bannerUri);
-            return uploadBanner(stream, context, storageReference.getDownloadUrl().toString());
+            return uploadBanner(song, stream, context, storageReference.getDownloadUrl().toString());
         }).addOnSuccessListener(uri -> {
             Log.d("TAG", "Banner file uploaded successfully!");
         }).addOnFailureListener(e -> {
@@ -78,11 +80,13 @@ public class FirebaseHandler {
         });
     }
 
-    public static Task<Uri> uploadBanner(InputStream inputStream, Context context, String songUrl){
+    public static Task<Uri> uploadBanner(Song song, InputStream inputStream, Context context, String songUrl){
         Log.d("TAG", "entered uploadBanner");
         FirebaseStorage storage = FirebaseStorage.getInstance();
         Log.d("TAG", "banner name: " + songUrl);
         StorageReference reference = storage.getReference().child("banner/" + songUrl + ".jpg");
+
+        DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference().child("musix").child("language");
 
         UploadTask uploadTask = reference.putStream(inputStream);
         return uploadTask.continueWithTask(task -> {
@@ -92,16 +96,36 @@ public class FirebaseHandler {
             }
             else{
                 Log.d("TAG", "banner file uploaded!");
+                Log.d("TAG", "song uploading to lang playlist...");
+//                databaseReference.child(song.getLanguage()).child("songs").child("duration").setValue();
+//                databaseReference.child(song.getLanguage()).child("songs").child(song.getKey()).setValue(true).addOnCompleteListener(task1 -> {
+//                    if(task1.isSuccessful()){
+//                        Log.d("TAG", "song uploaded to lang playlist!");
+//                    }
+//                    else{
+//                        Log.e("TAG", "Error: " + task.getException());
+//                    }
+//                });
             }
             return reference.getDownloadUrl();
         });
     }
 
-    public static void addLikedSong(Context context, Playlist playlist, String UID, Song song){
+    public static void addLikedSong(Context context, Playlist playlist, String UID, Song song, RunningApp runningApp){
+        Log.d("UID", "UID: " + UID);
         DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference()
                 .child("playlist")
                 .child(UID)
                 .child("liked");
+
+        new AsyncTask<Void, Void, Void>() {
+            @Override
+            protected Void doInBackground(Void... voids) {
+                Log.d("TAG", "Adding Song to ROOM DB...");
+                runningApp.getDatabase().songDao().addSong(song);
+                return null;
+            }
+        }.execute();
 
         databaseReference.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
@@ -135,11 +159,20 @@ public class FirebaseHandler {
         });
     }
 
-    public static void removeLikedSong(Context context, String UID, Song song) {
+    public static void removeLikedSong(Context context, String UID, Song song, RunningApp runningApp) {
         DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference()
                 .child("playlist")
                 .child(UID)
                 .child("liked");
+
+        new AsyncTask<Void, Void, Void>() {
+            @Override
+            protected Void doInBackground(Void... voids) {
+                Log.d("TAG", "Removing Song from ROOM DB...");
+                runningApp.getDatabase().songDao().removeSong(song.getKey());
+                return null;
+            }
+        }.execute();
 
         databaseReference.child("songs").child(song.getKey()).removeValue().addOnCompleteListener(task -> {
             if (!task.isSuccessful()) {
@@ -188,30 +221,23 @@ public class FirebaseHandler {
 
         SongCheckCallback songCheckCallback = () -> {
             Log.d("TAG", "inside SongCheck callback");
-//            if(!isPresent){
-                databaseReference.child("songs").child(song.getKey()).setValue(true).addOnCompleteListener(task -> {
-                    if(task.isSuccessful()){
-                        databaseReference.addListenerForSingleValueEvent(new ValueEventListener() {
-                            @Override
-                            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                                databaseReference.child("duration").setValue(snapshot.child("duration").getValue(Integer.class) + song.getDurationInSeconds());
-//                                if(snapshot.child("duration").getValue() == null) databaseReference.child("duration").setValue(song.getDurationInSeconds());
-//                                else databaseReference.child("duration").setValue(snapshot.child("duration").getValue(Integer.class) + song.getDurationInSeconds());
-                            }
-
-                            @Override
-                            public void onCancelled(@NonNull DatabaseError error) {
-
-                            }
-                        });
-                        Toast.makeText(context, "Added to " + playlistName, Toast.LENGTH_SHORT).show();
-                        new Handler(Looper.getMainLooper()).postDelayed(addToPlaylistCallback::OnSongAddedToPlaylist, 500);
-                    }
-                    else{
-                        Log.d("TAG", "error: Key not set in DB. Error: " + task.getException());
-                    }
+            databaseReference.child("songs").child(song.getKey()).setValue(true).addOnCompleteListener(task -> {
+                if(task.isSuccessful()){
+                    databaseReference.addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(@NonNull DataSnapshot snapshot) {
+                            databaseReference.child("duration").setValue(snapshot.child("duration").getValue(Integer.class) + song.getDurationInSeconds());
+                        }
+                        @Override
+                        public void onCancelled(@NonNull DatabaseError error) {}
+                    });
+                    Toast.makeText(context, "Added to " + playlistName, Toast.LENGTH_SHORT).show();
+                    new Handler(Looper.getMainLooper()).postDelayed(addToPlaylistCallback::OnSongAddedToPlaylist, 500);
+                }
+                else{
+                    Log.d("TAG", "error: Key not set in DB. Error: " + task.getException());
+                }
                 });
-//            }
         };
 
         databaseReference.child("songs").addListenerForSingleValueEvent(new ValueEventListener() {
@@ -226,31 +252,11 @@ public class FirebaseHandler {
                             isPresent = true;
                         } else {
                             Log.d("TAG", "Adding to this Playlist");
-//                        finalDur[0] += song.getDurationInSeconds();
-//                        if(databaseReference. == null) Log.d("TAG", "SNAPSHOT Dur value NULL!");
-//                        else Log.d("TAG", "SNAPSHOT Dur value NOT NULL!");
-
-//                        if(snapshot.getValue(Integer.class) == null) databaseReference.child("duration").setValue(song.getDurationInSeconds());
-//                        else databaseReference.child("duration").setValue(snapshot.child("duration").getValue(Integer.class) + song.getDurationInSeconds());
                         }
                         songCheckCallback.OnSongChecked();
                     }
                 }
                 new Handler(Looper.getMainLooper()).postDelayed(addToPlaylistCallback::OnSongAddedToPlaylist, 500);
-
-//                databaseReference.addListenerForSingleValueEvent(new ValueEventListener() {
-//                    @Override
-//                    public void onDataChange(@NonNull DataSnapshot snapshot) {
-//                        if(!isPresent)
-//                        {if(snapshot.child("duration").getValue() == null) databaseReference.child("duration").setValue(song.getDurationInSeconds());
-//                        else databaseReference.child("duration").setValue(snapshot.child("duration").getValue(Integer.class) + song.getDurationInSeconds());}
-//                    }
-//
-//                    @Override
-//                    public void onCancelled(@NonNull DatabaseError error) {
-//
-//                    }
-//                });
             }
             @Override
             public void onCancelled(@NonNull DatabaseError error) {

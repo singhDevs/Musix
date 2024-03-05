@@ -8,7 +8,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class Playlist implements Parcelable {
-    private int banner;
+    private String banner;
     private String title;
     private String creator;
     private int duration;
@@ -24,7 +24,7 @@ public class Playlist implements Parcelable {
         this.songs = songs;
     }
 
-    public Playlist(int banner, String title, String creator, int duration, Map<String, Boolean> songs) {
+    public Playlist(String banner, String title, String creator, int duration, Map<String, Boolean> songs) {
         this.banner = banner;
         this.title = title;
         this.creator = creator;
@@ -32,11 +32,11 @@ public class Playlist implements Parcelable {
         this.songs = songs;
     }
 
-    public int getBanner() {
+    public String getBanner() {
         return banner;
     }
 
-    public void setBanner(int banner) {
+    public void setBanner(String banner) {
         this.banner = banner;
     }
 
@@ -74,7 +74,7 @@ public class Playlist implements Parcelable {
 
     // Parcelable implementation
     protected Playlist(Parcel in) {
-        banner = in.readInt();
+        banner = in.readString();
         title = in.readString();
         creator = in.readString();
         duration = in.readInt();
@@ -90,7 +90,7 @@ public class Playlist implements Parcelable {
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
-        dest.writeInt(banner);
+        dest.writeString(banner);
         dest.writeString(title);
         dest.writeString(creator);
         dest.writeInt(duration);

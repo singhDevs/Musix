@@ -49,7 +49,7 @@ public class PlaylistsAdapter extends RecyclerView.Adapter<PlaylistsAdapter.View
                     .load(resourceId)
                     .into(holder.banner);
         }
-        holder.banner.setImageResource(playlists.get(position).getBanner());
+//        holder.banner.setImageResource(playlists.get(position).getBanner());
         holder.title.setText(playlists.get(position).getTitle());
         holder.artist.setText(playlists.get(position).getCreator());
 

@@ -29,7 +29,7 @@
 
         <TextView
             android:id="@+id/songTitle"
-            android:layout_width="wrap_content"
+            android:layout_width="227dp"
             android:layout_height="wrap_content"
             android:fontFamily="@font/inter_semibold"
             android:includeFontPadding="false"
@@ -46,7 +46,7 @@
 
         <TextView
             android:id="@+id/songArtist"
-            android:layout_width="wrap_content"
+            android:layout_width="227dp"
             android:layout_height="wrap_content"
             android:includeFontPadding="false"
             android:marqueeRepeatLimit="marquee_forever"
@@ -80,7 +80,7 @@
                 android:id="@+id/playBtn"
                 android:layout_width="35dp"
                 android:layout_height="35dp"
-                android:layout_marginStart="5dp"
+                android:layout_marginStart="10dp"
                 android:src="@drawable/ic_play_arrow" />
         </LinearLayout>
 
@@ -117,7 +117,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            app:layout_constraintGuide_begin="292dp" />
+            app:layout_constraintGuide_begin="290dp" />
 
 
     </androidx.constraintlayout.widget.ConstraintLayout>

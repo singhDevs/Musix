@@ -3,19 +3,26 @@ package com.example.musix.models;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import androidx.room.Entity;
+import androidx.room.PrimaryKey;
+
 import java.io.Serializable;
 
+@Entity(tableName = "liked_songs")
 public class Song implements Parcelable, Serializable {
-    private String id;
+    @PrimaryKey(autoGenerate = true)
+    private int sno;
     private String key;
+    private String id;
     private String Banner;
     private String title;
     private String artist;
     private int durationInSeconds;
     private String album;
     private int releaseYear;
+    private String language;
 
-    public Song(String id, String key, String banner, String title, String artist, int durationInSeconds, String album, int releaseYear) {
+    public Song(String id, String key, String banner, String title, String artist, int durationInSeconds, String album, int releaseYear, String language) {
         this.id = id;
         this.key = key;
         this.Banner = banner;
@@ -24,14 +31,16 @@ public class Song implements Parcelable, Serializable {
         this.durationInSeconds = durationInSeconds;
         this.album = album;
         this.releaseYear = releaseYear;
+        this.language = language;
     }
 
-    public Song(String id, String key, String banner, String title, String artist) {
+    public Song(String id, String key, String banner, String title, String artist, String language) {
         this.id = id;
         this.key = key;
         this.Banner = banner;
         this.title = title;
         this.artist = artist;
+        this.language = language;
     }
 
     // Parcelable constructor
@@ -44,6 +53,7 @@ public class Song implements Parcelable, Serializable {
         durationInSeconds = in.readInt();
         album = in.readString();
         releaseYear = in.readInt();
+        language = in.readString();
     }
 
     public static final Creator<Song> CREATOR = new Creator<Song>() {
@@ -71,6 +81,7 @@ public class Song implements Parcelable, Serializable {
         dest.writeInt(durationInSeconds);
         dest.writeString(album);
         dest.writeInt(releaseYear);
+        dest.writeString(language);
     }
 
     @Override
@@ -122,6 +133,14 @@ public class Song implements Parcelable, Serializable {
         return durationInSeconds;
     }
 
+    public String getLanguage() {
+        return language;
+    }
+
+    public void setLanguage(String language) {
+        this.language = language;
+    }
+
     public void setDurationInSeconds(int durationInSeconds) {
         this.durationInSeconds = durationInSeconds;
     }
@@ -140,5 +159,13 @@ public class Song implements Parcelable, Serializable {
 
     public void setReleaseYear(int releaseYear) {
         this.releaseYear = releaseYear;
+    }
+
+    public int getSno() {
+        return sno;
+    }
+
+    public void setSno(int sno) {
+        this.sno = sno;
     }
 }
