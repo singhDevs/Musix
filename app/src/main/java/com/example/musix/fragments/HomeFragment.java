@@ -1,5 +1,6 @@
 package com.example.musix.fragments;
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -31,6 +32,7 @@ import com.example.musix.activities.SeeAllActivtiy;
 import com.example.musix.adapters.LanguageAdapter;
 import com.example.musix.adapters.LatestHitsAdapter;
 import com.example.musix.adapters.PlaylistsAdapter;
+import com.example.musix.application.RunningApp;
 import com.example.musix.callbacks.PlaylistCallback;
 import com.example.musix.handlers.FirebaseHandler;
 import com.example.musix.handlers.GoogleSignInHelper;
@@ -58,6 +60,7 @@ import java.util.Map;
 public class HomeFragment extends Fragment {
     RecyclerView latestHitsRecycler, playlistsRecycler, languageRecycler;
     List<Song> latestHitsList = new ArrayList<>();
+    List<Song> likedSongsList = new ArrayList<>();
     List<Playlist> playlists = new ArrayList<>();
     List<Playlist> songsByLanguageList = new ArrayList<>();
     LatestHitsAdapter latestHitsAdapter;
@@ -135,6 +138,9 @@ public class HomeFragment extends Fragment {
                     .circleCrop()
                     .into(photo);
         }
+
+        //Fetching Liked Songs
+//        new GetLikedSongs().execute();
 
 
         //Latest Hits Recycler
@@ -363,7 +369,7 @@ public class HomeFragment extends Fragment {
         @Override
         protected List<Playlist> doInBackground(Void... voids) {return fetchLangPlaylists();}
         private List<Playlist> fetchLangPlaylists() {
-            Log.d("TAG", "entered fetchPlaylists");
+            Log.d("DB", "entered fetchPlaylists");
             DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference()
                     .child("musix")
                     .child("language");

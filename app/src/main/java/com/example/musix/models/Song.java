@@ -3,11 +3,17 @@ package com.example.musix.models;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import androidx.room.Entity;
+import androidx.room.PrimaryKey;
+
 import java.io.Serializable;
 
+@Entity(tableName = "liked_songs")
 public class Song implements Parcelable, Serializable {
-    private String id;
+    @PrimaryKey(autoGenerate = true)
+    private int sno;
     private String key;
+    private String id;
     private String Banner;
     private String title;
     private String artist;
@@ -153,5 +159,13 @@ public class Song implements Parcelable, Serializable {
 
     public void setReleaseYear(int releaseYear) {
         this.releaseYear = releaseYear;
+    }
+
+    public int getSno() {
+        return sno;
+    }
+
+    public void setSno(int sno) {
+        this.sno = sno;
     }
 }

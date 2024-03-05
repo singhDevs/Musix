@@ -2,6 +2,7 @@ package com.example.musix.handlers;
 
 import android.content.Context;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
@@ -9,6 +10,7 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 
+import com.example.musix.application.RunningApp;
 import com.example.musix.callbacks.AddToPlaylistCallback;
 import com.example.musix.callbacks.SongCheckCallback;
 import com.example.musix.models.Playlist;
@@ -109,11 +111,21 @@ public class FirebaseHandler {
         });
     }
 
-    public static void addLikedSong(Context context, Playlist playlist, String UID, Song song){
+    public static void addLikedSong(Context context, Playlist playlist, String UID, Song song, RunningApp runningApp){
+        Log.d("UID", "UID: " + UID);
         DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference()
                 .child("playlist")
                 .child(UID)
                 .child("liked");
+
+        new AsyncTask<Void, Void, Void>() {
+            @Override
+            protected Void doInBackground(Void... voids) {
+                Log.d("TAG", "Adding Song to ROOM DB...");
+                runningApp.getDatabase().songDao().addSong(song);
+                return null;
+            }
+        }.execute();
 
         databaseReference.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
@@ -147,11 +159,20 @@ public class FirebaseHandler {
         });
     }
 
-    public static void removeLikedSong(Context context, String UID, Song song) {
+    public static void removeLikedSong(Context context, String UID, Song song, RunningApp runningApp) {
         DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference()
                 .child("playlist")
                 .child(UID)
                 .child("liked");
+
+        new AsyncTask<Void, Void, Void>() {
+            @Override
+            protected Void doInBackground(Void... voids) {
+                Log.d("TAG", "Removing Song from ROOM DB...");
+                runningApp.getDatabase().songDao().removeSong(song.getKey());
+                return null;
+            }
+        }.execute();
 
         databaseReference.child("songs").child(song.getKey()).removeValue().addOnCompleteListener(task -> {
             if (!task.isSuccessful()) {
@@ -203,7 +224,6 @@ public class FirebaseHandler {
             databaseReference.child("songs").child(song.getKey()).setValue(true).addOnCompleteListener(task -> {
                 if(task.isSuccessful()){
                     databaseReference.addListenerForSingleValueEvent(new ValueEventListener() {
-
                         @Override
                         public void onDataChange(@NonNull DataSnapshot snapshot) {
                             databaseReference.child("duration").setValue(snapshot.child("duration").getValue(Integer.class) + song.getDurationInSeconds());

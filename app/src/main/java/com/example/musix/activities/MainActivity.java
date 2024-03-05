@@ -16,6 +16,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
@@ -33,21 +34,24 @@ import com.example.musix.databinding.ActivityMainBinding;
 import com.example.musix.fragments.HomeFragment;
 import com.example.musix.fragments.FilesFragment;
 import com.example.musix.fragments.SearchFragment;
+import com.example.musix.handlers.FirebaseHandler;
+import com.example.musix.models.Playlist;
 import com.example.musix.models.Song;
 import com.example.musix.services.MusicService;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.button.MaterialButton;
+import com.google.firebase.auth.FirebaseAuth;
 import com.ismaeldivita.chipnavigation.ChipNavigationBar;
 
 import java.io.Serializable;
+import java.util.HashMap;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
     private FragmentManager fragmentManager;
-    private int currentFragmentId = R.id.fragment_container; // Replace with your container id
+    private int currentFragmentId = R.id.fragment_container;
     private boolean isBackFromOtherActivity;
     private ChipNavigationBar navigationBar;
-    BottomNavigationView bottomNavigationView;
     boolean loadedFragment = false;
     ImageView songImgBanner, likeBtn, playBtn;
     TextView songTxtTitle, songTxtArtist;
@@ -60,6 +64,10 @@ public class MainActivity extends AppCompatActivity {
     private String songTitle, songArtist, songBanner, playlistName;
     private ActivityMainBinding binding;
     private int songPosition;
+    public final int NOT_LIKED = 0;
+    public final int LIKED = 1;
+    public int likeState;
+    String uid;
     private final BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -105,12 +113,12 @@ public class MainActivity extends AppCompatActivity {
             );
         }
 
-
         songBar = findViewById(R.id.songBar);
         songImgBanner = findViewById(R.id.songBanner);
         songTxtTitle = findViewById(R.id.songTitle);
         songTxtArtist = findViewById(R.id.songArtist);
         playBtn = findViewById(R.id.playBtn);
+        likeBtn = findViewById(R.id.likeBtn);
         fileBtn = findViewById(R.id.playFilesBtn);
         songTxtTitle.setSelected(true);
         songTxtArtist.setSelected(true);
@@ -132,43 +140,33 @@ public class MainActivity extends AppCompatActivity {
             startActivity(intent);
         });
 
-        FrameLayout bottomTopFrameLayout = findViewById(R.id.fragment_container); // Replace with your FrameLayout's id
-        View songBar = findViewById(R.id.songBar); // Replace with your songBar's id
+        likeBtn.setOnClickListener(view -> {
+            if (likeState == NOT_LIKED) {
+                likeBtn.setImageResource(R.drawable.heart_filled);
+                likeState = LIKED;
+                Playlist likedPlaylist = new Playlist("", "Liked Songs", FirebaseAuth.getInstance().getCurrentUser().getDisplayName(), 0, new HashMap<>());
 
-//        if(songBar == null) Log.d("songBar", "SongBar is NULL");
-//        else{
-//            Log.d("songBar", "SongBar is NOT NULL");
-//            songBar.addOnAttachStateChangeListener(new View.OnAttachStateChangeListener() {
-//                @Override
-//                public void onViewAttachedToWindow(View v) {
-//                    Log.d("songBar", "entered onViewAttachedToWindow...");
-//                    if (songBar.getVisibility() == View.VISIBLE) {
-//                        // SongBar is visible, set bottomTopFrameLayout parent to songBar
-//                        ((ViewGroup) songBar.getParent()).removeView(bottomTopFrameLayout);
-//                        ((ViewGroup) v).addView(bottomTopFrameLayout);
-//                    } else {
-//                        // SongBar is invisible, set bottomTopFrameLayout parent to activity/fragment layout
-//                        ((ViewGroup) bottomTopFrameLayout.getParent()).removeView(bottomTopFrameLayout);
-//                        ((ViewGroup) findViewById(android.R.id.content)).addView(bottomTopFrameLayout); // Assuming parent is activity layout
-//                    }
-//                }
-//
-//                @Override
-//                public void onViewDetachedFromWindow(View v) {
-//                    // Detaching, not relevant for this scenario
-//                }
-//            });
-//        }
+                uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
+                FirebaseHandler.addLikedSong(getApplicationContext(), likedPlaylist, uid, songList.get(songPosition), runningApp);
+            } else {
+                likeBtn.setImageResource(R.drawable.heart_outline);
+                likeState = NOT_LIKED;
+                uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
+                FirebaseHandler.removeLikedSong(getApplicationContext(), uid, songList.get(songPosition), runningApp);
+            }
+        });
 
         playBtn.setOnClickListener(v -> {
-            if (musicService.getMusicStatus() == MusicService.PLAYING_MUSIC) {
-                musicService.setMusicStatus(MusicService.PAUSED_MUSIC);
-                musicService.pauseMusic();
-                playBtn.setImageResource(R.drawable.ic_play_arrow);
-            } else {
-                musicService.setMusicStatus(MusicService.PLAYING_MUSIC);
-                musicService.playMusic();
-                playBtn.setImageResource(R.drawable.ic_pause);
+            if(musicService!= null) {
+                if (musicService.getMusicStatus() == MusicService.PLAYING_MUSIC) {
+                    musicService.setMusicStatus(MusicService.PAUSED_MUSIC);
+                    musicService.pauseMusic();
+                    playBtn.setImageResource(R.drawable.ic_play_arrow);
+                } else {
+                    musicService.setMusicStatus(MusicService.PLAYING_MUSIC);
+                    musicService.playMusic();
+                    playBtn.setImageResource(R.drawable.ic_pause);
+                }
             }
         });
 
@@ -185,54 +183,6 @@ public class MainActivity extends AppCompatActivity {
             }
 
         }
-
-//        FragmentManager fragmentManager = getSupportFragmentManager();
-//        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-//
-//        bottomNavigationView = findViewById(R.id.bottomNav);
-//
-//        bottomNavigationView.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener() {
-//            @Override
-//            public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-//                int itemId = item.getItemId();
-//                FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-//
-//                if(itemId == R.id.nav_home){
-//                    if(!loadedFragment){
-//                        fragmentTransaction.add(R.id.fragment_container, new HomeFragment());
-//                        loadedFragment = true;
-//                    }
-//                    else {
-//                        fragmentTransaction.replace(R.id.fragment_container, new HomeFragment());
-//                    }
-//                }
-//                if(itemId == R.id.nav_search) {
-//                    if(!loadedFragment){
-//                        fragmentTransaction.add(R.id.fragment_container, new SearchFragment());
-//                        loadedFragment = true;
-//                    }
-//                    else{
-//                        fragmentTransaction.replace(R.id.fragment_container, new SearchFragment());
-//                    }
-//                }
-//                if(itemId == R.id.nav_files){
-//                    if(!loadedFragment){
-//                        fragmentTransaction.add(R.id.fragment_container, new FilesFragment());
-//                        loadedFragment = true;
-//                    }
-//                    else{
-//                        fragmentTransaction.replace(R.id.fragment_container, new FilesFragment());
-//                    }
-//                }
-//                fragmentTransaction.commit();
-//                return true;
-//            }
-//        });
-//
-//        HomeFragment homeFragment = new HomeFragment();
-//
-//        fragmentTransaction.replace(R.id.fragment_container, homeFragment);
-//        fragmentTransaction.commit();
 
         fragmentManager = getSupportFragmentManager();
 
@@ -256,11 +206,8 @@ public class MainActivity extends AppCompatActivity {
 
         navigationBar = findViewById(R.id.bottomNav);
         binding.bottomNav.setItemSelected(R.id.nav_home, true);
-        // Bottom navigation listener
-//        BottomNavigationView bottomNavigationView = findViewById(R.id.bottomNav);
         if (navigationBar != null) {
             setUpTabBar();
-//            bottomNavigationView.setOnNavigationItemSelectedListener(navigationItemSelectedListener);
         } else {
             Log.e("MainActivity", "Navigation Bar is null!");
         }
@@ -268,6 +215,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void setUpSongBar() {
         songBar.setVisibility(View.VISIBLE);
+        new SetLikeState().execute();
         Log.d("songBar", "1.songBar visi: " + songBar.getVisibility());
         Log.d("songBar", "setting up song Bar...");
         Log.d("songBar", "Song title: " + songTitle);
@@ -284,7 +232,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setUpTabBar() {
-
         binding.bottomNav.setOnItemSelectedListener(new ChipNavigationBar.OnItemSelectedListener() {
             @Override
             public void onItemSelected(int itemId) {
@@ -300,34 +247,6 @@ public class MainActivity extends AppCompatActivity {
                     fragmentTransaction.commit();
                 }
             }
-
-//            @Override
-//            public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-//                int itemId = item.getItemId();
-//                FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-//                if (itemId == R.id.nav_home) {
-//                    fragmentTransaction.replace(currentFragmentId, new HomeFragment());
-//                    fragmentTransaction.commit();
-////                        binding.textMain.setText("Near");
-//                    return true;
-//                } else if (itemId == R.id.nav_search) {
-//                    fragmentTransaction.replace(currentFragmentId, new SearchFragment());
-//                    fragmentTransaction.commit();
-////                        binding.textMain.setText("Chat");
-//                    return true;
-//                } else if (itemId == R.id.nav_files) {
-//                    fragmentTransaction.replace(currentFragmentId, new FilesFragment());
-//                    fragmentTransaction.commit();
-////                        binding.textMain.setText("Profile");
-//                    return true;
-//                } else if (itemId == R.id.nav_premium) {
-//                    fragmentTransaction.replace(currentFragmentId, new SearchFragment());
-////                        binding.textMain.setText("Settings");
-//                    fragmentTransaction.commit();
-//                    return true;
-//                }
-//                return false;
-//            }
         });
     }
 
@@ -345,12 +264,24 @@ public class MainActivity extends AppCompatActivity {
                     } else if (itemId == R.id.nav_files) {
                         fragmentTransaction.replace(currentFragmentId, new FilesFragment());
                     }
-                    // Add more navigation logic for other fragments
-
                     fragmentTransaction.commit();
                     return true;
                 }
             };
+
+    private class SetLikeState extends AsyncTask<Void, Void, Void> {
+        @Override
+        protected Void doInBackground(Void... voids) {
+            if (runningApp.getDatabase().songDao().isSongLiked(songList.get(songPosition).getKey())) {
+                likeState = LIKED;
+                likeBtn.setImageResource(R.drawable.heart_filled);
+            } else {
+                likeState = NOT_LIKED;
+                likeBtn.setImageResource(R.drawable.heart_outline);
+            }
+            return null;
+        }
+    }
 
     @Override
     public void onSaveInstanceState(Bundle outState) {

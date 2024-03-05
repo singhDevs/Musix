@@ -12,6 +12,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.media.AudioManager;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
@@ -33,6 +34,7 @@ import com.example.musix.handlers.FirebaseHandler;
 import com.example.musix.models.Playlist;
 import com.example.musix.models.Song;
 import com.example.musix.services.MusicService;
+import com.example.musix.settings.MusicPlayerSettings;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.firebase.auth.FirebaseAuth;
 import com.makeramen.roundedimageview.RoundedImageView;
@@ -57,7 +59,6 @@ public class NewMusicPlayer extends AppCompatActivity {
     ImageView playBtn, nextBtn, prevBtn, backBtn, likeBtn, repeatBtn, volumeIcon, shuffleBtn, moreBtn, bottomBanner;
     SeekBar seekbar, volumeSeekbar;
     Handler handler;
-    int duration;
     public final int PLAYING_MUSIC = 1;
     public final int PAUSED_MUSIC = 2;
     public final int NOT_LIKED = 0;
@@ -76,11 +77,12 @@ public class NewMusicPlayer extends AppCompatActivity {
     private RunningApp runningApp;
     private MusicService musicService;
     private ServiceConnection serviceConnection;
+    private MusicPlayerSettings musicPlayerSettings;
     private final BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             Log.d("broadcast", "Song Changed Broadcast received");
-            if(intent.getAction() != null && intent.getAction().equals(MusicService.SONG_CHANGED)){
+            if (intent.getAction() != null && intent.getAction().equals(MusicService.SONG_CHANGED)) {
                 songPosition = intent.getIntExtra("songPosition", 0);
                 Log.d("TAG", "song Position: " + songPosition);
                 setUpUI(songList.get(songPosition));
@@ -100,15 +102,15 @@ public class NewMusicPlayer extends AppCompatActivity {
         setContentView(R.layout.activity_new_music_player);
 
         runningApp = (RunningApp) getApplication();
-        if(runningApp != null){
+        if (runningApp != null) {
             Log.d("TAG", "initializing music service in Music Player & Service Connection");
             musicService = runningApp.getMusicService();
             serviceConnection = runningApp.getServiceConnection();
-        }
-        else{
+        } else {
             Log.d("TAG", "Running App is NULL");
         }
 
+        musicPlayerSettings = new MusicPlayerSettings(getApplicationContext());
         IntentFilter filter = new IntentFilter(MusicService.SONG_CHANGED);
         LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver, filter);
 
@@ -117,20 +119,14 @@ public class NewMusicPlayer extends AppCompatActivity {
         initializeUI();
         setUpMusicService();
 
-        //TODO: Do i need to comm back to the activity for the musicStatus?
         backBtn.setOnClickListener(view -> {
             onBackPressed();
-//            Intent intent = new Intent(this, MainActivity.class);
-//            intent.putExtra("isBackFromOtherActivity", true);
-//            startActivity(intent);
-//            finish();
         });
 
         playBtn.setOnClickListener(view -> {
-            if(musicStatus == PAUSED_MUSIC) {
+            if (musicStatus == PAUSED_MUSIC) {
                 playMusic();
-            }
-            else if(musicStatus == PLAYING_MUSIC) pauseMusic();
+            } else if (musicStatus == PLAYING_MUSIC) pauseMusic();
         });
 
         nextBtn.setOnClickListener(view -> {
@@ -143,59 +139,58 @@ public class NewMusicPlayer extends AppCompatActivity {
         });
 
         likeBtn.setOnClickListener(view -> {
-            //TODO: load Liked Playlist on Login
-            if(likeState == NOT_LIKED){
+            if (likeState == NOT_LIKED) {
                 likeBtn.setImageResource(R.drawable.heart_filled);
                 likeState = LIKED;
                 Playlist likedPlaylist = new Playlist("", "Liked Songs", FirebaseAuth.getInstance().getCurrentUser().getDisplayName(), 0, new HashMap<>());
-                FirebaseHandler.addLikedSong(getApplicationContext(), likedPlaylist, uid, songList.get(songPosition));
-            }
-            else{
+
+                uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
+                FirebaseHandler.addLikedSong(getApplicationContext(), likedPlaylist, uid, songList.get(songPosition), runningApp);
+            } else {
                 likeBtn.setImageResource(R.drawable.heart_outline);
                 likeState = NOT_LIKED;
-                FirebaseHandler.removeLikedSong(getApplicationContext(), uid, songList.get(songPosition));
+                uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
+                FirebaseHandler.removeLikedSong(getApplicationContext(), uid, songList.get(songPosition), runningApp);
             }
         });
 
         shuffleBtn.setOnClickListener(view -> {
-            if(shuffleStatus == NO_SHUFFLE){
+            if (shuffleStatus == NO_SHUFFLE) {
                 shuffleStatus = SHUFFLE;
                 musicService.setShuffleStatus(MusicService.SHUFFLE);
                 shuffleBtn.setImageResource(R.drawable.shuffle);
-            }
-            else{
+            } else {
                 shuffleStatus = NO_SHUFFLE;
                 musicService.setShuffleStatus(MusicService.NO_SHUFFLE);
                 shuffleBtn.setImageResource(R.drawable.no_shuffle);
             }
+            musicPlayerSettings.saveSettings(shuffleStatus, repeatState);
         });
 
         repeatBtn.setOnClickListener(view -> {
-            if(repeatState == NOT_REPEATED){
+            if (repeatState == NOT_REPEATED) {
                 repeatBtn.setImageResource(R.drawable.repeat);
                 repeatState = REPEAT;
                 musicService.setRepeatStatus(MusicService.REPEAT);
-            }
-            else if(repeatState == REPEAT){
+            } else if (repeatState == REPEAT) {
                 repeatBtn.setImageResource(R.drawable.repeat_one);
                 repeatState = REPEAT_ONE;
                 musicService.setRepeatStatus(MusicService.REPEAT_ONE);
-            }
-            else{
+            } else {
                 repeatBtn.setImageResource(R.drawable.no_repeat);
                 repeatState = NOT_REPEATED;
                 musicService.setRepeatStatus(MusicService.NOT_REPEATED);
             }
+            musicPlayerSettings.saveSettings(shuffleStatus, repeatState);
         });
 
         moreBtn.setOnClickListener(view -> {
             final LinearLayout layoutMore = findViewById(R.id.layoutMore);
             final BottomSheetBehavior<LinearLayout> bottomSheetBehavior = BottomSheetBehavior.from(layoutMore);
-            if(bottomSheetBehavior.getState() != BottomSheetBehavior.STATE_EXPANDED){
+            if (bottomSheetBehavior.getState() != BottomSheetBehavior.STATE_EXPANDED) {
                 layoutMore.setVisibility(View.VISIBLE);
                 bottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
-            }
-            else{
+            } else {
                 bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
                 new Handler(Looper.getMainLooper()).postDelayed(() -> layoutMore.setVisibility(View.GONE), 150);
             }
@@ -204,25 +199,27 @@ public class NewMusicPlayer extends AppCompatActivity {
         addToPlaylist.setOnClickListener(view -> {
             Intent intent1 = new Intent(this, AddToPlaylist.class);
             intent1.putExtra("song", (Parcelable) songList.get(songPosition));
-            if(song == null) Log.d("TAG","Lol DEWD");
+            if (song == null) Log.d("TAG", "Lol DEWD");
             startActivity(intent1);
         });
 
         seekbar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
-                if(b){
+                if (b) {
 //                    player.seekTo(i* 1000L);
-                    musicService.playerSeekTo(i*1000L);
+                    musicService.playerSeekTo(i * 1000L);
                     currDuration.setText(formatTime(i));
                 }
             }
 
             @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {}
+            public void onStartTrackingTouch(SeekBar seekBar) {
+            }
 
             @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {}
+            public void onStopTrackingTouch(SeekBar seekBar) {
+            }
         });
 
         //managing Volume
@@ -239,7 +236,7 @@ public class NewMusicPlayer extends AppCompatActivity {
                 AudioManager.AUDIOFOCUS_GAIN
         );
 
-        if(audioFocus == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
+        if (audioFocus == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
             volumeSeekbar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
                 @Override
                 public void onProgressChanged(SeekBar seekBar, int progress, boolean b) {
@@ -283,14 +280,14 @@ public class NewMusicPlayer extends AppCompatActivity {
         }
     }
 
-    private void setUpMusicService(){
+    private void setUpMusicService() {
         Log.d("TAG", "setting up Music Service");
         Intent serviceIntent = new Intent(this, MusicService.class);
         musicService.fetchData(songList, songPosition, playlistTitle);
         bindService(serviceIntent, serviceConnection, Context.BIND_AUTO_CREATE);
     }
 
-    private void fetchIntentData(){
+    private void fetchIntentData() {
         Log.d("TAG", "inside fetch Intent Data");
         Intent intent = getIntent();
         songList = (List<Song>) intent.getSerializableExtra("songList");
@@ -301,7 +298,7 @@ public class NewMusicPlayer extends AppCompatActivity {
         Log.d("TAG", "in NEW PLAYER song URL: " + songURL);
     }
 
-    private void initializeUI(){
+    private void initializeUI() {
         Log.d("TAG", "inside initialize UI");
         playlistName = findViewById(R.id.playlistName);
         songTitle = findViewById(R.id.songTitle);
@@ -312,15 +309,17 @@ public class NewMusicPlayer extends AppCompatActivity {
         currDuration = findViewById(R.id.currDuration);
         songDuration = findViewById(R.id.songDuration);
         musicStatus = PLAYING_MUSIC;
-        shuffleStatus = NO_SHUFFLE;
-        likeState = NOT_LIKED;
-        repeatState = NOT_REPEATED;
+        shuffleStatus = musicPlayerSettings.getShuffleSetting();
+        repeatState = musicPlayerSettings.getRepeatSetting();
 
-        if(musicService == null) Log.d("TAG", "music Service is NULL!");
+        //Setting Like State
+        new SetLikeState().execute();
+
+        if (musicService == null) Log.d("TAG", "music Service is NULL!");
         else Log.d("TAG", "music Service is NOT NULL!");
         musicService.setMusicStatus(MusicService.PLAYING_MUSIC);
-        musicService.setRepeatStatus(MusicService.NO_SHUFFLE);
-        musicService.setShuffleStatus(MusicService.NOT_REPEATED);
+        musicService.setRepeatStatus(musicPlayerSettings.getRepeatSetting());
+        musicService.setShuffleStatus(musicPlayerSettings.getShuffleSetting());
         playBtn = findViewById(R.id.playBtn);
         nextBtn = findViewById(R.id.nextBtn);
         prevBtn = findViewById(R.id.prevBtn);
@@ -334,11 +333,27 @@ public class NewMusicPlayer extends AppCompatActivity {
         repeatBtn = findViewById(R.id.repeatBtn);
         songBanner = findViewById(R.id.songBanner);
         playlistName.setText(playlistTitle);
+
+        //setting up shuffle button
+        if (shuffleStatus == NO_SHUFFLE)
+            shuffleBtn.setImageResource(R.drawable.no_shuffle);
+        else
+            shuffleBtn.setImageResource(R.drawable.shuffle);
+
+        //setting up repeat button
+        if (repeatState == NOT_REPEATED) {
+            repeatBtn.setImageResource(R.drawable.no_repeat);
+        } else if (repeatState == REPEAT) {
+            repeatBtn.setImageResource(R.drawable.repeat);
+        } else {
+            repeatBtn.setImageResource(R.drawable.repeat_one);
+        }
+
         songTitle.setSelected(true);    //for Marquee
         handler = new Handler(Looper.getMainLooper());
     }
 
-    private void updateSeekBar(){
+    private void updateSeekBar() {
         handler.postDelayed(new Runnable() {
             @Override
             public void run() {
@@ -350,7 +365,21 @@ public class NewMusicPlayer extends AppCompatActivity {
         }, 1000);
     }
 
-    private void playMusic(){
+    private class SetLikeState extends AsyncTask<Void, Void, Void> {
+        @Override
+        protected Void doInBackground(Void... voids) {
+            if (runningApp.getDatabase().songDao().isSongLiked(songList.get(songPosition).getKey())) {
+                likeState = LIKED;
+                likeBtn.setImageResource(R.drawable.heart_filled);
+            } else {
+                likeState = NOT_LIKED;
+                likeBtn.setImageResource(R.drawable.heart_outline);
+            }
+            return null;
+        }
+    }
+
+    private void playMusic() {
         Log.d("TAG", "Playing Music");
         playBtn.setImageResource(R.drawable.ic_pause_filled);
         musicStatus = PLAYING_MUSIC;
@@ -358,7 +387,7 @@ public class NewMusicPlayer extends AppCompatActivity {
         musicService.playMusic();
     }
 
-    private void pauseMusic(){
+    private void pauseMusic() {
         Log.d("TAG", "Music Paused");
         playBtn.setImageResource(R.drawable.ic_play_filled);
         musicStatus = PAUSED_MUSIC;
@@ -401,7 +430,7 @@ public class NewMusicPlayer extends AppCompatActivity {
                 .into(bottomBanner);
     }
 
-    private void setBanner(String bannerUrl, RoundedImageView roundedImageView){
+    private void setBanner(String bannerUrl, RoundedImageView roundedImageView) {
         Log.d("glide", "Glide being called");
         Glide.with(this)
                 .load(bannerUrl)
