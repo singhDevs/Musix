@@ -37,9 +37,13 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.firebase.auth.FirebaseAuth;
 import com.makeramen.roundedimageview.RoundedImageView;
 
+import org.jetbrains.annotations.Contract;
+
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.List;
+
+import kotlin.internal.LowPriorityInOverloadResolution;
 
 public class NewMusicPlayer extends AppCompatActivity {
     private NotificationManager notificationManager;
@@ -114,7 +118,14 @@ public class NewMusicPlayer extends AppCompatActivity {
         setUpMusicService();
 
         //TODO: Do i need to comm back to the activity for the musicStatus?
-        backBtn.setOnClickListener(view -> finish());
+        backBtn.setOnClickListener(view -> {
+            onBackPressed();
+//            Intent intent = new Intent(this, MainActivity.class);
+//            intent.putExtra("isBackFromOtherActivity", true);
+//            startActivity(intent);
+//            finish();
+        });
+
         playBtn.setOnClickListener(view -> {
             if(musicStatus == PAUSED_MUSIC) {
                 playMusic();

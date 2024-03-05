@@ -1,18 +1,18 @@
-<menu xmlns:android="http://schemas.android.com/apk/res/android">
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
         android:id="@+id/nav_home"
         android:title="@string/home"
-        android:icon="@drawable/ic_home" />
+        android:icon="@drawable/ic_home"
+        app:cnb_iconColor = "#5BC8FA"/>
     <item
         android:id="@+id/nav_search"
         android:title="@string/search"
-        android:icon="@drawable/ic_search" />
+        android:icon="@drawable/ic_search"
+        app:cnb_iconColor = "#BCFF6F"/>
     <item
         android:id="@+id/nav_files"
         android:title="@string/files"
-        android:icon="@drawable/ic_folder" />
-    <item
-        android:id="@+id/nav_premium"
-        android:title="@string/premium"
-        android:icon="@drawable/ic_premium" />
+        android:icon="@drawable/ic_folder"
+        app:cnb_iconColor = "#FFF070"/>
 </menu>

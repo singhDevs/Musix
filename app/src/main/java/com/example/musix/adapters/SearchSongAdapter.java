@@ -1,11 +1,13 @@
 package com.example.musix.adapters;
 
 import android.content.Context;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.example.musix.R;
@@ -37,18 +39,42 @@ public class SearchSongAdapter extends RecyclerView.Adapter<SearchSongAdapter.Vi
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        Glide.with(holder.itemView.getContext())
-                .load(songs.get(position).getBanner())
-                .into(holder.banner);
-        holder.title.setText(songs.get(position).getTitle());
-        holder.artist.setText(songs.get(position).getArtist());
-        holder.duration.setText(formatTime(songs.get(position).getDurationInSeconds()));
+        Log.d("TAG", "------- inside OnBinder -------");
+        Log.d("TAG", "songs size: " + songs.size());
+        Log.d("TAG", "position: " + position);
+        Log.d("TAG", "song title: " + songs.get(position).getTitle());
+        Log.d("TAG", "------- end OnBinder -------");
+
+        if (songs.isEmpty()) {
+            // Handle empty list scenario:
+            Toast.makeText(context, "No results found", Toast.LENGTH_SHORT).show();
+        } else {
+            // Bind data for populated list:
+            Glide.with(holder.itemView.getContext())
+                    .load(songs.get(position).getBanner())
+                    .into(holder.banner);
+            holder.title.setText(songs.get(position).getTitle());
+            holder.artist.setText(songs.get(position).getArtist());
+            holder.duration.setText(formatTime(songs.get(position).getDurationInSeconds()));
+        }
 
         holder.itemView.setOnClickListener(v -> {
-            if(onSearchItemClickListener != null){
+            if (onSearchItemClickListener != null && !songs.isEmpty()) { // Only handle clicks if songs list is not empty
                 onSearchItemClickListener.OnSongClicked(songs, position);
             }
         });
+//        Glide.with(holder.itemView.getContext())
+//                .load(songs.get(position).getBanner())
+//                .into(holder.banner);
+//        holder.title.setText(songs.get(position).getTitle());
+//        holder.artist.setText(songs.get(position).getArtist());
+//        holder.duration.setText(formatTime(songs.get(position).getDurationInSeconds()));
+//
+//        holder.itemView.setOnClickListener(v -> {
+//            if(onSearchItemClickListener != null){
+//                onSearchItemClickListener.OnSongClicked(songs, position);
+//            }
+//        });
     }
 
     @Override
@@ -67,7 +93,6 @@ public class SearchSongAdapter extends RecyclerView.Adapter<SearchSongAdapter.Vi
             duration = itemView.findViewById(R.id.duration);
         }
     }
-
 
 
     public void cancelTimer() {

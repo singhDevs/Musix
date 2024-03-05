@@ -21,6 +21,7 @@ import java.io.Serializable
 class MusicService(): Service()
 {
     companion object{
+        const val NOT_STARTED: Int = 0
         const val PLAYING_MUSIC: Int = 1
         const val PAUSED_MUSIC: Int = 2
         const val NOT_REPEATED = 0
@@ -34,7 +35,7 @@ class MusicService(): Service()
     }
     private var isServiceRunning = false
     private var sameSong = false
-    var musicStatus: Int = PLAYING_MUSIC
+    var musicStatus: Int = NOT_STARTED
     var repeatStatus: Int = NOT_REPEATED
     var shuffleStatus: Int = NO_SHUFFLE
     val context: Context = this
@@ -174,11 +175,10 @@ class MusicService(): Service()
                 intent.putExtra("playlistName", playlistName)
                 LocalBroadcastManager.getInstance(this@MusicService).sendBroadcast(intent)
             }
-
-
         })
         player.prepare()
         player.play()
+        musicStatus = PLAYING_MUSIC
         Log.d("TAG", "------------------------initialize player ends------------------------")
     }
 

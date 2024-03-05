@@ -59,14 +59,20 @@ public class SearchFragment extends Fragment {
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_search, container, false);
 
+        searchRecycler = view.findViewById(R.id.searchRecycler);
+        LinearLayoutManager layoutManager = new LinearLayoutManager(getContext(), LinearLayoutManager.VERTICAL, false);
+        searchRecycler.setLayoutManager(layoutManager);
+
         searchBox = view.findViewById(R.id.searchBox);
         clearSearch = view.findViewById(R.id.clearSearch);
         clearSearch.setOnClickListener(v -> {
             searchBox.setText("");
-            searchRecycler.setVisibility(View.GONE);
-            Log.d("TAG", "clearing songs...");
             songs.clear();
             adapter.notifyDataSetChanged();
+//            searchRecycler.setVisibility(View.GONE);
+            Log.d("TAG", "clearing songs...");
+            Log.d("TAG", "songs size: " + songs.size());
+            Log.d("TAG", "1.Search Recycler Visibility: " + searchRecycler.getVisibility());
         });
 
         searchBox.addTextChangedListener(new TextWatcher() {
@@ -78,7 +84,8 @@ public class SearchFragment extends Fragment {
             public void onTextChanged(CharSequence s, int start, int before, int count) {
                 if (count > 0) {
                     clearSearch.setVisibility(View.VISIBLE);
-                    searchRecycler.setVisibility(View.VISIBLE);
+//                    searchRecycler.setVisibility(View.VISIBLE);
+                    Log.d("TAG", "2.Search Recycler Visibility: " + searchRecycler.getVisibility());
                 }
                 adapter.cancelTimer();
             }
@@ -88,12 +95,14 @@ public class SearchFragment extends Fragment {
                 if (!s.toString().isEmpty()) {
                     clearSearch.setVisibility(View.VISIBLE);
                     searchBox.setVisibility(View.VISIBLE);
+                    Log.d("TAG", "3.Search Recycler Visibility: " + searchRecycler.getVisibility());
                 }
                 if (searchBox.getText().toString().isEmpty())
                     clearSearch.setVisibility(View.GONE);
 
                 if (!allSongs.isEmpty()) {
                     searchBox.setVisibility(View.VISIBLE);
+                    Log.d("TAG", "4.Search Recycler Visibility: " + searchRecycler.getVisibility());
                     searchSongs(s.toString());
                 } else {
                     Toast.makeText(getContext(), "No song matches your search", Toast.LENGTH_SHORT).show();
@@ -101,10 +110,6 @@ public class SearchFragment extends Fragment {
             }
         });
 
-
-        searchRecycler = view.findViewById(R.id.searchRecycler);
-        LinearLayoutManager layoutManager = new LinearLayoutManager(getContext(), LinearLayoutManager.VERTICAL, false);
-        searchRecycler.setLayoutManager(layoutManager);
 
         SearchSongAdapter.OnSearchItemClickListener onSearchItemClickListener = (songList, position) -> {
             List<Song> tempPlaylist = new ArrayList<>();
@@ -171,7 +176,9 @@ public class SearchFragment extends Fragment {
 
     public void searchSongs(final String keyword) {
         Log.d("TAG", "entered searchSongs()...");
-        searchRecycler.setVisibility(View.VISIBLE);
+        Log.d("TAG", "5.Search Recycler Visibility: " + searchRecycler.getVisibility());
+//        searchRecycler.setVisibility(View.VISIBLE);
+        cancelTimer();
         timer = new Timer();
         timer.schedule(new TimerTask() {
             @Override
@@ -206,24 +213,25 @@ public class SearchFragment extends Fragment {
                         @Override
                         public void run() {
                             Log.d("TAG", "updating UI...");
-                            searchRecycler.setVisibility(View.VISIBLE);
+//                            searchRecycler.setVisibility(View.VISIBLE);
                             songs.clear();
                             songs.addAll(searchResult);
+                            Log.d("TAG", "6.Search Recycler Visibility: " + searchRecycler.getVisibility());
+                            Log.d("TAG", "6.songs size: " + songs.size());
                             Log.d("TAG", "Fetched Search Results...");
-                            for(Song song : songs){
+                            for (Song song : songs) {
                                 Log.d("TAG", "Song: " + song.getTitle());
                             }
                             adapter.notifyDataSetChanged();
                         }
                     });
                 }
-
-                new Handler(Looper.getMainLooper()).post(new Runnable() {
-                    @Override
-                    public void run() {
-                        adapter.notifyDataSetChanged();
-                    }
-                });
+//                new Handler(Looper.getMainLooper()).post(new Runnable() {
+//                    @Override
+//                    public void run() {
+//                        adapter.notifyDataSetChanged();
+//                    }
+//                });
             }
         }, 500);
     }
@@ -233,8 +241,8 @@ public class SearchFragment extends Fragment {
             timer.cancel();
     }
 
-    public void updateData(List<Song> newList){
-        this.allSongs = newList;
-        adapter.notifyDataSetChanged();
-    }
+//    public void updateData(List<Song> newList) {
+//        this.allSongs = newList;
+//        adapter.notifyDataSetChanged();
+//    }
 }
