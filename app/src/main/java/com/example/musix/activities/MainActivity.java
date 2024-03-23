@@ -300,7 +300,11 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onDestroy() {
+        Log.d("TAG", "onDestroy called.");
         super.onDestroy();
-        unregisterReceiver(broadcastReceiver);
+        if (broadcastReceiver != null) {
+            LocalBroadcastManager.getInstance(this).unregisterReceiver(broadcastReceiver);
+
+        }
     }
 }

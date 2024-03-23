@@ -7,10 +7,8 @@ import android.content.Intent
 import android.os.Binder
 import android.os.IBinder
 import android.util.Log
-import androidx.core.app.NotificationCompat
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.example.musix.Notification.MusicPlayerNotificationService
-import com.example.musix.R
 import com.example.musix.models.Song
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.MediaItem
@@ -48,11 +46,7 @@ class MusicService(): Service()
     private lateinit var notificationManager: NotificationManager
 
     override fun onBind(intent: Intent?): IBinder? {
-        notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        val musicPlayerNotificationService = songList[songPosition]?.let { MusicPlayerNotificationService(applicationContext, it) }
-        val notification = musicPlayerNotificationService!!.getNotification()
-        notificationManager.notify(1, notification)
-        startForeground(1, notification)
+
         return mBinder
     }
 
@@ -136,8 +130,14 @@ class MusicService(): Service()
     private fun initializePlayer(songUri: String) {
         Log.d("TAG", "------------------------Initializing Player------------------------")
         Log.d("TAG", "Song Pos: " + songPosition + "\t\tSong: " + songList.get(songPosition)?.title)
-        val mediaItem = MediaItem.fromUri(songUri)
+        Log.d("TAG", "setting Notification in init player...")
+        notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val musicPlayerNotificationService = songList[songPosition]?.let { MusicPlayerNotificationService(applicationContext, it) }
+        val notification = musicPlayerNotificationService!!.getNotification()
+        notificationManager.notify(1, notification)
+        startForeground(1, notification)
 
+        val mediaItem = MediaItem.fromUri(songUri)
         player.setMediaItem(mediaItem)
         player.addListener(object : Player.Listener{
             override fun onPlaybackStateChanged(playbackState: Int) {
@@ -189,7 +189,7 @@ class MusicService(): Service()
         Log.d("TAG", "PLaying music from Service")
     }
 
-    public fun notifySongChanged() {
+    fun notifySongChanged() {
         val intent = Intent(SONG_CHANGED)
         Log.d("TAG", "inside notif, songPos: " + songPosition)
         Log.d("TAG", "Song Changed Broadcast sent, songPos: " + songPosition)
@@ -257,6 +257,7 @@ class MusicService(): Service()
                 }
             }
         }
+        notifySongChanged();
     }
 
     fun playPrev(){
@@ -275,6 +276,7 @@ class MusicService(): Service()
             resetPlayer()
             playMusic()
         }
+        notifySongChanged()
     }
 
     private fun resetPlayer(){

@@ -65,7 +65,7 @@ public class Login extends AppCompatActivity {
         setContentView(R.layout.activity_login);
 
         videoView = findViewById(R.id.videoView);
-        String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.video; // Replace with your actual video file
+        String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.video;
 
         // Parse the URI and set it to the VideoView
         Uri uri = Uri.parse(videoPath);

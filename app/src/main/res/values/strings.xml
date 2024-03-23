@@ -32,4 +32,9 @@
     <string name="play_from_files">Play from Files</string>
     <string name="see_all">See all</string>
     <string name="what_do_you_want_to_listen_to">What do you want to listen to?</string>
+    <string name="see_more">See more</string>
+    <string name="about">About</string>
+    <string name="songs">Songs</string>
+    <string name="artist_image">Artist Image</string>
+    <string name="popular">Popular</string>
 </resources>

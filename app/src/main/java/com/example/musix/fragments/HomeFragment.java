@@ -1,17 +1,8 @@
 package com.example.musix.fragments;
 
-import android.annotation.SuppressLint;
 import android.content.Intent;
-import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
-
-import androidx.annotation.NonNull;
-import androidx.fragment.app.Fragment;
-import androidx.recyclerview.widget.GridLayoutManager;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-
 import android.os.Parcelable;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -23,17 +14,22 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
 import com.bumptech.glide.Glide;
 import com.example.musix.R;
-import com.example.musix.activities.Login;
 import com.example.musix.activities.NewMusicPlayer;
 import com.example.musix.activities.PlaylistActivity;
 import com.example.musix.activities.SeeAllActivtiy;
 import com.example.musix.adapters.LanguageAdapter;
 import com.example.musix.adapters.LatestHitsAdapter;
 import com.example.musix.adapters.PlaylistsAdapter;
-import com.example.musix.application.RunningApp;
 import com.example.musix.callbacks.PlaylistCallback;
+import com.example.musix.dialogs.ViewDialog;
 import com.example.musix.handlers.FirebaseHandler;
 import com.example.musix.handlers.GoogleSignInHelper;
 import com.example.musix.models.Playlist;
@@ -60,14 +56,15 @@ import java.util.Map;
 public class HomeFragment extends Fragment {
     RecyclerView latestHitsRecycler, playlistsRecycler, languageRecycler;
     List<Song> latestHitsList = new ArrayList<>();
-    List<Song> likedSongsList = new ArrayList<>();
     List<Playlist> playlists = new ArrayList<>();
     List<Playlist> songsByLanguageList = new ArrayList<>();
     LatestHitsAdapter latestHitsAdapter;
     PlaylistsAdapter playlistsAdapter;
     LanguageAdapter languageAdapter;
     TextView greetingTxt, latestHitsSeeAll, playlistSeeAll;
+    ImageView photo;
     GoogleSignInOptions gso;
+    ViewDialog viewDialog;
     private Button logoutBtn, uploadSong;
     private LinearLayout signInButton;
     private GoogleSignInAccount account;
@@ -92,6 +89,7 @@ public class HomeFragment extends Fragment {
         account = GoogleSignIn.getLastSignedInAccount(getContext());
         gso = GoogleSignInHelper.getSignInOptions(getContext());
 
+
         latestHitsSeeAll = view.findViewById(R.id.latestHitsSeeAll);
         playlistSeeAll = view.findViewById(R.id.playlistSeeAll);
         latestHitsSeeAll.setOnClickListener(new View.OnClickListener() {
@@ -113,18 +111,9 @@ public class HomeFragment extends Fragment {
         greetingTxt = view.findViewById(R.id.greetingTxt);
         greetingTxt.setText(greeting);
 
-        ImageView photo = view.findViewById(R.id.photo);
-        logoutBtn = view.findViewById(R.id.logoutBtn);
-        logoutBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                signOut();
-                if(getActivity() != null){
-                    getActivity().finish();
-                    startActivity(new Intent(getActivity(), Login.class));
-                }
-            }
-        });
+        viewDialog = new ViewDialog(getContext(), getActivity());
+        photo = view.findViewById(R.id.photo);
+        photo.setOnClickListener(v -> viewDialog.showAccountDialog(account.getDisplayName(), account.getEmail(), account.getPhotoUrl()));
 
         if(account != null){
             Glide.with(getContext())
@@ -138,10 +127,6 @@ public class HomeFragment extends Fragment {
                     .circleCrop()
                     .into(photo);
         }
-
-        //Fetching Liked Songs
-//        new GetLikedSongs().execute();
-
 
         //Latest Hits Recycler
         latestHitsRecycler = view.findViewById(R.id.recyclerLatestHits);

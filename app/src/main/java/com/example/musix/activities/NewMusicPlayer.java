@@ -1,12 +1,8 @@
 package com.example.musix.activities;
 
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.localbroadcastmanager.content.LocalBroadcastManager;
-
 import android.annotation.SuppressLint;
 import android.app.NotificationManager;
 import android.content.BroadcastReceiver;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -15,7 +11,6 @@ import android.media.AudioManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.IBinder;
 import android.os.Looper;
 import android.os.Parcelable;
 import android.util.Log;
@@ -24,7 +19,9 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
-import android.widget.Toast;
+
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.bumptech.glide.Glide;
 import com.example.musix.Notification.MusicPlayerNotificationService;
@@ -39,17 +36,11 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.firebase.auth.FirebaseAuth;
 import com.makeramen.roundedimageview.RoundedImageView;
 
-import org.jetbrains.annotations.Contract;
-
-import java.io.Serializable;
 import java.util.HashMap;
 import java.util.List;
 
-import kotlin.internal.LowPriorityInOverloadResolution;
-
 public class NewMusicPlayer extends AppCompatActivity {
-    private NotificationManager notificationManager;
-    private MusicPlayerNotificationService notificationService;
+    private MusicPlayerNotificationService musicPlayerNotificationService;
     private AudioManager audioManager;
     private Song song;
     private List<Song> songList;
@@ -81,7 +72,7 @@ public class NewMusicPlayer extends AppCompatActivity {
     private final BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            Log.d("broadcast", "Song Changed Broadcast received");
+            Log.d("TAG", "Song Changed Broadcast received");
             if (intent.getAction() != null && intent.getAction().equals(MusicService.SONG_CHANGED)) {
                 songPosition = intent.getIntExtra("songPosition", 0);
                 Log.d("TAG", "song Position: " + songPosition);
@@ -154,6 +145,15 @@ public class NewMusicPlayer extends AppCompatActivity {
             }
         });
 
+        songArtist.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent1 = new Intent(getApplicationContext(), ArtistActivity.class);
+                intent1.putExtra("artist_name", songList.get(songPosition).getArtist());
+                startActivity(intent1);
+            }
+        });
+
         shuffleBtn.setOnClickListener(view -> {
             if (shuffleStatus == NO_SHUFFLE) {
                 shuffleStatus = SHUFFLE;
@@ -199,7 +199,12 @@ public class NewMusicPlayer extends AppCompatActivity {
         addToPlaylist.setOnClickListener(view -> {
             Intent intent1 = new Intent(this, AddToPlaylist.class);
             intent1.putExtra("song", (Parcelable) songList.get(songPosition));
-            if (song == null) Log.d("TAG", "Lol DEWD");
+            startActivity(intent1);
+        });
+        LinearLayout aboutArtist = findViewById(R.id.aboutArtist);
+        aboutArtist.setOnClickListener(view -> {
+            Intent intent1 = new Intent(this, ArtistActivity.class);
+            intent1.putExtra("artist_name", songList.get(songPosition).getArtist());
             startActivity(intent1);
         });
 
@@ -300,6 +305,8 @@ public class NewMusicPlayer extends AppCompatActivity {
 
     private void initializeUI() {
         Log.d("TAG", "inside initialize UI");
+
+        musicPlayerNotificationService = new MusicPlayerNotificationService(getApplicationContext(), songList.get(songPosition));
         playlistName = findViewById(R.id.playlistName);
         songTitle = findViewById(R.id.songTitle);
         songArtist = findViewById(R.id.songArtist);

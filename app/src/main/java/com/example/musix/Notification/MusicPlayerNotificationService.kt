@@ -9,6 +9,7 @@ import android.graphics.BitmapFactory
 import android.os.Build
 import android.util.Log
 import androidx.core.app.NotificationCompat
+import androidx.core.content.ContextCompat
 import com.example.musix.R
 import com.example.musix.activities.MusicPlayer
 import com.example.musix.models.Song
@@ -25,6 +26,13 @@ open class MusicPlayerNotificationService(private val context: Context, private 
             if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)PendingIntent.FLAG_IMMUTABLE else 0
         )
 
+        val prevIntent = PendingIntent.getBroadcast(
+            context,
+            4,
+            Intent(context, PrevMusicNotificationReceiver::class.java),
+            if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) PendingIntent.FLAG_IMMUTABLE else 0
+        )
+
         val playIntent = PendingIntent.getBroadcast(
             context,
             2,
@@ -39,12 +47,6 @@ open class MusicPlayerNotificationService(private val context: Context, private 
             if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) PendingIntent.FLAG_IMMUTABLE else 0
         )
 
-        val prevIntent = PendingIntent.getBroadcast(
-            context,
-            4,
-            Intent(context, PrevMusicNotificationReceiver::class.java),
-            if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) PendingIntent.FLAG_IMMUTABLE else 0
-        )
         val icon = BitmapFactory.decodeResource(context.resources, R.drawable.musix_notif)
 
         Log.d("notif", "song.title: " + song.title)
@@ -54,6 +56,8 @@ open class MusicPlayerNotificationService(private val context: Context, private 
             .setLargeIcon(icon)
             .setContentTitle(song.title)
             .setContentText(song.artist)
+             .setColorized(true)
+             .setColor(ContextCompat.getColor(context, R.color.notification_color))
             .setContentIntent(activityPendingIntent)
             .addAction(R.drawable.ic_previous,
                 "Prev",
@@ -69,10 +73,12 @@ open class MusicPlayerNotificationService(private val context: Context, private 
 
     fun getNotification(): Notification{
         generateNotification()
+        notificationManager.notify(NOTIFICATION_ID, notification);
         return notification!!
     }
 
     companion object{
         const val MUSIC_PLAYER_CHANNEL_ID = "music_player_channel"
+        const val NOTIFICATION_ID = 1
     }
 }
