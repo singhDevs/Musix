@@ -115,9 +115,21 @@ public class NewMusicPlayer extends AppCompatActivity {
         });
 
         playBtn.setOnClickListener(view -> {
-            if (musicStatus == PAUSED_MUSIC) {
+            if (musicStatus == PLAYING_MUSIC) {
+                pauseMusic();
+                Log.d("TAG", "Saving PAUSE state...");
+                int play = MusicService.PAUSED_MUSIC;
+                int shuffle = musicPlayerSettings.getShuffleSetting();
+                int repeat = musicPlayerSettings.getRepeatSetting();
+                musicPlayerSettings.saveSettings(play, shuffle, repeat);
+            } else{
                 playMusic();
-            } else if (musicStatus == PLAYING_MUSIC) pauseMusic();
+                Log.d("TAG", "Saving PLAY state...");
+                int play = MusicService.PLAYING_MUSIC;
+                int shuffle = musicPlayerSettings.getShuffleSetting();
+                int repeat = musicPlayerSettings.getRepeatSetting();
+                musicPlayerSettings.saveSettings(play, shuffle, repeat);
+            }
         });
 
         nextBtn.setOnClickListener(view -> {
@@ -164,7 +176,7 @@ public class NewMusicPlayer extends AppCompatActivity {
                 musicService.setShuffleStatus(MusicService.NO_SHUFFLE);
                 shuffleBtn.setImageResource(R.drawable.no_shuffle);
             }
-            musicPlayerSettings.saveSettings(shuffleStatus, repeatState);
+            musicPlayerSettings.saveSettings(musicService.getMusicStatus(), shuffleStatus, repeatState);
         });
 
         repeatBtn.setOnClickListener(view -> {
@@ -181,7 +193,7 @@ public class NewMusicPlayer extends AppCompatActivity {
                 repeatState = NOT_REPEATED;
                 musicService.setRepeatStatus(MusicService.NOT_REPEATED);
             }
-            musicPlayerSettings.saveSettings(shuffleStatus, repeatState);
+            musicPlayerSettings.saveSettings(musicService.getMusicStatus(), shuffleStatus, repeatState);
         });
 
         moreBtn.setOnClickListener(view -> {
@@ -306,7 +318,7 @@ public class NewMusicPlayer extends AppCompatActivity {
     private void initializeUI() {
         Log.d("TAG", "inside initialize UI");
 
-        musicPlayerNotificationService = new MusicPlayerNotificationService(getApplicationContext(), songList.get(songPosition));
+        musicPlayerNotificationService = new MusicPlayerNotificationService(getApplicationContext(), songList.get(songPosition), R.drawable.ic_pause);
         playlistName = findViewById(R.id.playlistName);
         songTitle = findViewById(R.id.songTitle);
         songArtist = findViewById(R.id.songArtist);
@@ -324,7 +336,7 @@ public class NewMusicPlayer extends AppCompatActivity {
 
         if (musicService == null) Log.d("TAG", "music Service is NULL!");
         else Log.d("TAG", "music Service is NOT NULL!");
-        musicService.setMusicStatus(MusicService.PLAYING_MUSIC);
+        musicService.setMusicStatus(musicPlayerSettings.getPlaySetting());
         musicService.setRepeatStatus(musicPlayerSettings.getRepeatSetting());
         musicService.setShuffleStatus(musicPlayerSettings.getShuffleSetting());
         playBtn = findViewById(R.id.playBtn);
@@ -354,6 +366,16 @@ public class NewMusicPlayer extends AppCompatActivity {
             repeatBtn.setImageResource(R.drawable.repeat);
         } else {
             repeatBtn.setImageResource(R.drawable.repeat_one);
+        }
+
+        //setting up play button
+        if(musicService.getMusicStatus() == PLAYING_MUSIC) {
+            Log.d("TAG", "setting up PAUSE img on play btn...");
+            playBtn.setImageResource(R.drawable.ic_pause_filled);
+        }
+        else {
+            Log.d("TAG", "setting up PLAY img on play btn...");
+            playBtn.setImageResource(R.drawable.ic_play_filled);
         }
 
         songTitle.setSelected(true);    //for Marquee
@@ -428,7 +450,16 @@ public class NewMusicPlayer extends AppCompatActivity {
         songDuration.setText(formatTime(song.getDurationInSeconds()));
         seekbar.setMax(song.getDurationInSeconds());
         setBanner(song.getBanner(), songBanner);
-        playBtn.setImageResource(R.drawable.ic_pause_filled);
+
+        //setting up play button
+        if(musicService.getMusicStatus() == PLAYING_MUSIC) {
+            Log.d("TAG", "setting up PAUSE img on play btn...");
+            playBtn.setImageResource(R.drawable.ic_pause_filled);
+        }
+        else {
+            Log.d("TAG", "setting up PLAY img on play btn...");
+            playBtn.setImageResource(R.drawable.ic_play_arrow);
+        }
 
         bottomTitle.setText(song.getTitle());
         bottomArtist.setText(song.getArtist());

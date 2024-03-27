@@ -21,7 +21,7 @@ import com.google.firebase.auth.FirebaseAuth
 
 class ViewDialog(private val context: Context, private val activity: Activity?) {
     private val gso = GoogleSignInHelper.getSignInOptions(context)
-    fun showAccountDialog(name: String, email: String, photoURL: Uri){
+    fun showAccountDialog(name: String, email: String, photoURL: String){
         Log.d("TAG", "Entered showAccountDialog")
         val dialog = Dialog(activity!!)
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
@@ -30,6 +30,7 @@ class ViewDialog(private val context: Context, private val activity: Activity?) 
         dialog.window!!.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
         dialog.findViewById<TextView>(R.id.name).text = name
         dialog.findViewById<TextView>(R.id.email).text = email
+        Log.d("TAG", "Photo URL: $photoURL");
         Glide.with(context)
             .load(photoURL)
             .circleCrop()

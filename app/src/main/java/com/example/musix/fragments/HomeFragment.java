@@ -10,7 +10,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -19,12 +18,12 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.bumptech.glide.Glide;
 import com.example.musix.R;
 import com.example.musix.activities.NewMusicPlayer;
 import com.example.musix.activities.PlaylistActivity;
-import com.example.musix.activities.SeeAllActivtiy;
 import com.example.musix.adapters.LanguageAdapter;
 import com.example.musix.adapters.LatestHitsAdapter;
 import com.example.musix.adapters.PlaylistsAdapter;
@@ -55,18 +54,18 @@ import java.util.Map;
 
 public class HomeFragment extends Fragment {
     RecyclerView latestHitsRecycler, playlistsRecycler, languageRecycler;
-    List<Song> latestHitsList = new ArrayList<>();
+    List<Song> latestHitsList = new ArrayList<>(), songsList = new ArrayList<>();
     List<Playlist> playlists = new ArrayList<>();
     List<Playlist> songsByLanguageList = new ArrayList<>();
     LatestHitsAdapter latestHitsAdapter;
     PlaylistsAdapter playlistsAdapter;
     LanguageAdapter languageAdapter;
-    TextView greetingTxt, latestHitsSeeAll, playlistSeeAll;
+    TextView greetingTxt, latestHitsSeeAll;
     ImageView photo;
     GoogleSignInOptions gso;
     ViewDialog viewDialog;
-    private Button logoutBtn, uploadSong;
-    private LinearLayout signInButton;
+    SwipeRefreshLayout swipeRefreshLayout;
+    private Button uploadSong;
     private GoogleSignInAccount account;
 
     public HomeFragment() {
@@ -89,20 +88,41 @@ public class HomeFragment extends Fragment {
         account = GoogleSignIn.getLastSignedInAccount(getContext());
         gso = GoogleSignInHelper.getSignInOptions(getContext());
 
+        swipeRefreshLayout = view.findViewById(R.id.swipe_refresh_layout);
+        swipeRefreshLayout.setOnRefreshListener(() -> {
+            new GetLatestHits().execute();
+            new GetPlaylistTask(playlists -> {}).execute();
+            new GetLangPlaylistTask(playlists -> {}).execute();
+        });
+
 
         latestHitsSeeAll = view.findViewById(R.id.latestHitsSeeAll);
-        playlistSeeAll = view.findViewById(R.id.playlistSeeAll);
         latestHitsSeeAll.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(getContext(), SeeAllActivtiy.class);
-                startActivity(intent);
-            }
-        });
-        playlistSeeAll.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(getContext(), SeeAllActivtiy.class);
+                Map<String, Boolean> songsMap = new HashMap<>();
+                int duration = 0;
+                for (Song song : songsList) {
+                    songsMap.put(song.getKey(), true);
+                    duration += song.getDurationInSeconds();
+                }
+
+                Playlist playlist = new Playlist("Latest Hits", "Musix", duration, songsMap);
+                Intent intent = new Intent(getContext(), PlaylistActivity.class);
+                intent.putExtra("playlist", (Parcelable) playlist);
+//                if(playlists == null) Log.d("TAG", "in Home Fragment, playlist is null!");
+//                else {
+//                    if(playlists.getSongs() == null){
+//                        Log.d("TAG", "in Home Fragment, playlist songs is NULL!");
+//                        playlists.setSongs(new HashMap<>());
+//                    }
+//                    else{
+//                        Log.d("TAG", "in Home Fragment, playlist is NOT null! size: " + playlists.getSongs().size());
+//                        for(Map.Entry<String, Boolean> entry : playlists.getSongs().entrySet()){
+//                            Log.d("TAG", "key: " + entry.getKey() + "\t\tValue: " + entry.getValue());
+//                        }
+//                    }
+//                }
                 startActivity(intent);
             }
         });
@@ -113,7 +133,34 @@ public class HomeFragment extends Fragment {
 
         viewDialog = new ViewDialog(getContext(), getActivity());
         photo = view.findViewById(R.id.photo);
-        photo.setOnClickListener(v -> viewDialog.showAccountDialog(account.getDisplayName(), account.getEmail(), account.getPhotoUrl()));
+//        String name = "", email = "", uri = "";
+//        if(account == null){
+//            name = account.getEmail();
+//            uri = "android.resource://" + requireContext().getPackageName() + "/drawable/user";
+//        }
+//        else{
+//            name = account.getDisplayName();
+//            uri = account.getPhotoUrl().toString();
+//        }
+//        email = account.getEmail();
+        photo.setOnClickListener(new View.OnClickListener() {
+
+            @Override
+            public void onClick(View v) {
+                String name = "", email = "", uri = "";
+                if(account == null){
+                    name = FirebaseAuth.getInstance().getCurrentUser().getUid();
+                    email = FirebaseAuth.getInstance().getCurrentUser().getEmail();
+                    uri = "android.resource://" + requireContext().getPackageName() + "/drawable/user";
+                }
+                else{
+                    name = account.getDisplayName();
+                    uri = account.getPhotoUrl().toString();
+                    email = account.getEmail();
+                }
+                viewDialog.showAccountDialog(name, email, uri);
+            }
+        });
 
         if(account != null){
             Glide.with(getContext())
@@ -273,7 +320,6 @@ public class HomeFragment extends Fragment {
 
     public List<Song> fetchLatestHits(){
         DatabaseReference reference = FirebaseDatabase.getInstance().getReference().child("songs");
-        List<Song> songsList = new ArrayList<>();
 
         reference.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
@@ -388,6 +434,7 @@ public class HomeFragment extends Fragment {
                     Log.d("TAG", "Error fetching data: " + error.getMessage());
                 }
             });
+            swipeRefreshLayout.setRefreshing(false);
             return playlistList;
         }
     }

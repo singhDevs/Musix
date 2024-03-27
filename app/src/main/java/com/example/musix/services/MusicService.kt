@@ -9,6 +9,7 @@ import android.os.IBinder
 import android.util.Log
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.example.musix.Notification.MusicPlayerNotificationService
+import com.example.musix.R
 import com.example.musix.models.Song
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.MediaItem
@@ -132,7 +133,7 @@ class MusicService(): Service()
         Log.d("TAG", "Song Pos: " + songPosition + "\t\tSong: " + songList.get(songPosition)?.title)
         Log.d("TAG", "setting Notification in init player...")
         notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        val musicPlayerNotificationService = songList[songPosition]?.let { MusicPlayerNotificationService(applicationContext, it) }
+        val musicPlayerNotificationService = songList[songPosition]?.let { MusicPlayerNotificationService(applicationContext, it, R.drawable.ic_pause) }
         val notification = musicPlayerNotificationService!!.getNotification()
         notificationManager.notify(1, notification)
         startForeground(1, notification)
@@ -186,6 +187,12 @@ class MusicService(): Service()
         player.playWhenReady = true
         player.play()
         musicStatus = PLAYING_MUSIC
+        Log.d("TAG", "setting Notification in init player...")
+        notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val musicPlayerNotificationService = songList[songPosition]?.let { MusicPlayerNotificationService(applicationContext, it, R.drawable.ic_pause) }
+        val notification = musicPlayerNotificationService!!.getNotification()
+        notificationManager.notify(1, notification)
+        startForeground(1, notification)
         Log.d("TAG", "PLaying music from Service")
     }
 
@@ -199,6 +206,12 @@ class MusicService(): Service()
 
     fun pauseMusic(){
         player.pause()
+        Log.d("TAG", "setting Notification in init player...")
+        notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val musicPlayerNotificationService = songList[songPosition]?.let { MusicPlayerNotificationService(applicationContext, it, R.drawable.ic_play_arrow) }
+        val notification = musicPlayerNotificationService!!.getNotification()
+        notificationManager.notify(1, notification)
+        startForeground(1, notification)
         Log.d("TAG", "Music Paused in Service")
     }
 

@@ -99,8 +99,8 @@ public class MusicPlayer extends AppCompatActivity {
         Intent intent = getIntent();
         song = intent.getParcelableExtra("song");
 
-        if(song != null)
-            notificationService = new MusicPlayerNotificationService(this, song);
+//        if(song != null)
+//            notificationService = new MusicPlayerNotificationService(this, song);
 
         String songUrl = intent.getStringExtra("songUrl");
         Log.d("TAG", "songURL: " + songUrl);

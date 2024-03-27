@@ -38,6 +38,7 @@ import com.example.musix.handlers.FirebaseHandler;
 import com.example.musix.models.Playlist;
 import com.example.musix.models.Song;
 import com.example.musix.services.MusicService;
+import com.example.musix.settings.MusicPlayerSettings;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.button.MaterialButton;
 import com.google.firebase.auth.FirebaseAuth;
@@ -52,6 +53,7 @@ public class MainActivity extends AppCompatActivity {
     private int currentFragmentId = R.id.fragment_container;
     private boolean isBackFromOtherActivity;
     private ChipNavigationBar navigationBar;
+    private MusicPlayerSettings musicPlayerSettings;
     boolean loadedFragment = false;
     ImageView songImgBanner, likeBtn, playBtn;
     TextView songTxtTitle, songTxtArtist;
@@ -102,6 +104,7 @@ public class MainActivity extends AppCompatActivity {
             Log.d("TAG", "inside Main Activity, Running App is NULL");
         }
 
+        musicPlayerSettings = new MusicPlayerSettings(getApplicationContext());
         IntentFilter filter = new IntentFilter(MusicService.PLAYER_PLAYING);
         LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver, filter);
 
@@ -158,12 +161,22 @@ public class MainActivity extends AppCompatActivity {
 
         playBtn.setOnClickListener(v -> {
             if(musicService!= null) {
-                if (musicService.getMusicStatus() == MusicService.PLAYING_MUSIC) {
+                if (musicPlayerSettings.getPlaySetting() == MusicService.PLAYING_MUSIC) {
                     musicService.setMusicStatus(MusicService.PAUSED_MUSIC);
+                    Log.d("TAG", "Found PLAYING, setting PAUSED state...");
+                    int play = MusicService.PAUSED_MUSIC;
+                    int shuffle = musicPlayerSettings.getShuffleSetting();
+                    int repeat = musicPlayerSettings.getRepeatSetting();
+                    musicPlayerSettings.saveSettings(play, shuffle, repeat);
                     musicService.pauseMusic();
                     playBtn.setImageResource(R.drawable.ic_play_arrow);
                 } else {
                     musicService.setMusicStatus(MusicService.PLAYING_MUSIC);
+                    Log.d("TAG", "Found PAUSED, setting PLAY state...");
+                    int play = MusicService.PLAYING_MUSIC;
+                    int shuffle = musicPlayerSettings.getShuffleSetting();
+                    int repeat = musicPlayerSettings.getRepeatSetting();
+                    musicPlayerSettings.saveSettings(play, shuffle, repeat);
                     musicService.playMusic();
                     playBtn.setImageResource(R.drawable.ic_pause);
                 }

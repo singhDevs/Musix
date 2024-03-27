@@ -29,6 +29,7 @@
         android:layout_height="60dp"
         android:layout_alignParentBottom="true"
         style="@style/AppTheme"
+        android:background="@color/black"
         app:cnb_menuResource="@menu/bottom_nav_items"
         app:layout_constraintBottom_toBottomOf="parent"/>
 

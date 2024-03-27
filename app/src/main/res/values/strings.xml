@@ -37,4 +37,8 @@
     <string name="songs">Songs</string>
     <string name="artist_image">Artist Image</string>
     <string name="popular">Popular</string>
+    <string name="punjabi">Punjabi</string>
+    <string name="register">Register</string>
+    <string name="let_s_get_your_account_set_up">Let\'s get your account set up</string>
+    <string name="sign_up_with_google">Sign up with Google</string>
 </resources>

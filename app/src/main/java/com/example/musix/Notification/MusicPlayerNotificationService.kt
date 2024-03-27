@@ -7,16 +7,20 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.BitmapFactory
 import android.os.Build
+import android.support.v4.media.session.MediaSessionCompat
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
+import androidx.media.app.NotificationCompat.MediaStyle
 import com.example.musix.R
 import com.example.musix.activities.MusicPlayer
 import com.example.musix.models.Song
 
-open class MusicPlayerNotificationService(private val context: Context, private val song: Song) {
+
+open class MusicPlayerNotificationService(private val context: Context, private val song: Song, private val img: Int) {
     private val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
     private var notification: Notification? = null
+    var mediaSessionCompat = MediaSessionCompat(context, "tag")
     fun generateNotification(){
         val activityIntent = Intent(context, MusicPlayer::class.java)
         val activityPendingIntent = PendingIntent.getActivity(
@@ -47,7 +51,7 @@ open class MusicPlayerNotificationService(private val context: Context, private 
             if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) PendingIntent.FLAG_IMMUTABLE else 0
         )
 
-        val icon = BitmapFactory.decodeResource(context.resources, R.drawable.musix_notif)
+        val icon = BitmapFactory.decodeResource(context.resources, R.drawable.bg_notif)
 
         Log.d("notif", "song.title: " + song.title)
         Log.d("notif", "song.artist: " + song.artist)
@@ -62,12 +66,15 @@ open class MusicPlayerNotificationService(private val context: Context, private 
             .addAction(R.drawable.ic_previous,
                 "Prev",
                 prevIntent)
-            .addAction(R.drawable.ic_play_arrow,
+            .addAction(img,
                 "Play",
                 playIntent)
             .addAction(R.drawable.ic_next,
                 "Next",
                 nextIntent)
+             .setStyle(MediaStyle()
+                 .setShowActionsInCompactView(0, 1, 2)
+                 .setMediaSession(mediaSessionCompat.sessionToken))
             .build()
     }
 

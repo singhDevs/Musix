@@ -41,7 +41,7 @@
             android:id="@+id/playFilesBtn"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="20dp"
+            android:layout_marginBottom="10dp"
             android:paddingHorizontal="20dp"
             android:paddingVertical="14dp"
             android:text="@string/play_from_files"
