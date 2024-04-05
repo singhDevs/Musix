@@ -63,12 +63,12 @@ class ViewDialog(private val context: Context, private val activity: Activity?) 
         dialog.findViewById<TextView>(R.id.artist_name).text = artist.title
         dialog.findViewById<TextView>(R.id.aboutText).text = artist.text
 
+        dialog.show()
         val url = artist.banner
         Glide.with(context)
-            .load("https://firebasestorage.googleapis.com/v0/b/musix-a6206.appspot.com/o/banner%2Fabout_karan_aujla.jpg?alt=media&token=4b6dc927-c080-4c6d-ba14-9d0a9a1b02df")
+            .load(url)
             .into(dialog.findViewById(R.id.artist_image))
 
-        dialog.show()
         val close = dialog.findViewById<ImageView>(R.id.close_btn)
         close.setOnClickListener{
             dialog.dismiss()

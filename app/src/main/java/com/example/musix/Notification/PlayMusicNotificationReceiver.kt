@@ -28,11 +28,13 @@ class PlayMusicNotificationReceiver: BroadcastReceiver() {
         if(musicService?.musicStatus == PLAYING_MUSIC){
             Log.d("TAG", "Music Paused")
             musicService?.musicStatus = PAUSED_MUSIC
+            Log.d("TAG", "music status set as: Music Paused")
             musicService?.pauseMusic()
         }
         else if(musicService?.musicStatus == PAUSED_MUSIC){
             Log.d("TAG", "Music playing")
             musicService?.musicStatus = PLAYING_MUSIC
+            Log.d("TAG", "music status set as: Music Playing")
             musicService?.playMusic()
         }
     }

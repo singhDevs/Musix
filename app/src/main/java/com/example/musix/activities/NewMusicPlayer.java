@@ -107,15 +107,15 @@ public class NewMusicPlayer extends AppCompatActivity {
 
         Log.d("TAG", "calling 3 functions...");
         fetchIntentData();
-        initializeUI();
         setUpMusicService();
+        initializeUI();
 
         backBtn.setOnClickListener(view -> {
             onBackPressed();
         });
 
         playBtn.setOnClickListener(view -> {
-            if (musicStatus == PLAYING_MUSIC) {
+            if (musicService.getMusicStatus() == PLAYING_MUSIC) {
                 pauseMusic();
                 Log.d("TAG", "Saving PAUSE state...");
                 int play = MusicService.PAUSED_MUSIC;
@@ -307,12 +307,19 @@ public class NewMusicPlayer extends AppCompatActivity {
     private void fetchIntentData() {
         Log.d("TAG", "inside fetch Intent Data");
         Intent intent = getIntent();
-        songList = (List<Song>) intent.getSerializableExtra("songList");
-        songPosition = intent.getIntExtra("songPosition", 0);
-        uid = intent.getStringExtra("currentUser");
-        playlistTitle = intent.getStringExtra("playlistName");
-        songURL = intent.getStringExtra("songUrl");
-        Log.d("TAG", "in NEW PLAYER song URL: " + songURL);
+
+        if (intent != null && intent.hasExtra("notificationSongList")) {
+            String msg = intent.getStringExtra("notificationSongList");
+
+        }
+        else{
+            songList = (List<Song>) intent.getSerializableExtra("songList");
+            songPosition = intent.getIntExtra("songPosition", 0);
+            uid = intent.getStringExtra("currentUser");
+            playlistTitle = intent.getStringExtra("playlistName");
+            songURL = intent.getStringExtra("songUrl");
+            Log.d("TAG", "in NEW PLAYER song URL: " + songURL);
+        }
     }
 
     private void initializeUI() {
@@ -458,7 +465,7 @@ public class NewMusicPlayer extends AppCompatActivity {
         }
         else {
             Log.d("TAG", "setting up PLAY img on play btn...");
-            playBtn.setImageResource(R.drawable.ic_play_arrow);
+            playBtn.setImageResource(R.drawable.ic_play_filled);
         }
 
         bottomTitle.setText(song.getTitle());

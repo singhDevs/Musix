@@ -16,7 +16,7 @@
 
     <include layout="@layout/song_bar_layout"
         android:id="@+id/songBar"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:visibility="gone"
         app:layout_constraintBottom_toTopOf="@id/bottomNav"
