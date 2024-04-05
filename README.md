@@ -1,7 +1,8 @@
 # Musix - Music Player
 **Musix**: your ultimate music companion. With seamless playlist creation, artist exploration, and uninterrupted background play - even when your device is locked or other apps are in use — Musix delivers an unparalleled listening experience. Plus, rest easy knowing your data is securely stored in the cloud via Firebase.
 
-![Musix Logo](https://github.com/singhDevs/Musix/assets/139853742/8a4e7799-9386-446a-8dc4-8d67b51d4257)
+![Musix Logo](https://github.com/singhDevs/Musix/assets/139853742/20535cf4-4880-4b35-a48c-c5f503f0eac0)
+
 
 ## Features
 
@@ -17,49 +18,48 @@
 
 # Screenshots
 ## Home Screen
-![Home Screen](https://github.com/singhDevs/Musix/assets/139853742/25a0d413-5bbc-4aaa-a9ca-b76585ebbced)
+![Home Screen](https://github.com/singhDevs/Musix/assets/139853742/8065e191-a732-4f99-8cd1-9ae07a8168c0)
 
-![Home Screen](https://github.com/singhDevs/Musix/assets/139853742/ef275248-606a-48dd-9df6-563382c1cfbf)
 
 ## Music Player
-![Music Player](https://github.com/singhDevs/Musix/assets/139853742/65201db8-ec5a-49f0-aadd-ad0900066094)
+![Music Player](https://github.com/singhDevs/Musix/assets/139853742/6e2ad92a-4457-4826-9683-f8e908dcd470)
 
 
 ## Music Player Bottom Sheet
-![Music Player Bottom Sheet](https://github.com/singhDevs/Musix/assets/139853742/a984790d-eb0e-4388-914d-741d2adf2b76)
+![Music Player more ](https://github.com/singhDevs/Musix/assets/139853742/11ee80a8-2e90-4062-b0c1-5ec0832550ad)
 
 
 ## Add to Playlist
-![Add to Playlist](https://github.com/singhDevs/Musix/assets/139853742/4d41134f-2096-44ec-8c72-6d78c53bf3c0)
+![add to playlist](https://github.com/singhDevs/Musix/assets/139853742/99f1e4d5-7a14-44e9-a495-4ec7ac59b8e6)
 
 
-## Creating new playlist
-![Creating new playlist](https://github.com/singhDevs/Musix/assets/139853742/cac8862f-fa55-4b12-958e-64206ad1013b)
+## Creating a new playlist
+![new playlist](https://github.com/singhDevs/Musix/assets/139853742/a4bfb024-408e-4544-bafc-338c1db45624)
 
 
 ## About the artist
-![About artist](https://github.com/singhDevs/Musix/assets/139853742/68eb8fe6-ab38-483a-8bed-b26ab9a3b944)
+![about artist 1](https://github.com/singhDevs/Musix/assets/139853742/39845aa0-134a-4c33-92f4-5085e82158ae)
 
 
 ## Searching song
-![Searching song](https://github.com/singhDevs/Musix/assets/139853742/e8b6816f-323e-41a2-97c9-2ab451adf437)
+![searching song](https://github.com/singhDevs/Musix/assets/139853742/05020d15-4cf4-4d3d-9f3f-90c0248ce8c8)
 
 
 ## Play from Local Storage
-![Play from Local Storage](https://github.com/singhDevs/Musix/assets/139853742/600c5945-bd56-4eb6-92cd-81c7caa8ba45)
+![play from local storage](https://github.com/singhDevs/Musix/assets/139853742/c92a6c13-5234-429a-9538-3c40e9c785c3)
 
 
 ## Selecting Audio File from Local Storage
-![Selecting Audio File from Local Storage](https://github.com/singhDevs/Musix/assets/139853742/e8f0e422-254d-4cf4-8532-b8eebd0a1619)
+![selecting local file](https://github.com/singhDevs/Musix/assets/139853742/c7b724e0-4c80-4f53-bcd6-f99d859a5844)
 
 
 ## Playing Audio file from Local Storage
-![Playing Audio file from Local Storage](https://github.com/singhDevs/Musix/assets/139853742/09c1283b-d33c-4371-aa17-11e501e25885)
+![playing local file](https://github.com/singhDevs/Musix/assets/139853742/9e51a815-9406-4de4-8aac-f640c5074693)
 
 
 ## Notification
-![Notification](https://github.com/singhDevs/Musix/assets/139853742/2fd62a5d-e593-4a15-b8ee-f11919710909)
+![Notification](https://github.com/singhDevs/Musix/assets/139853742/5181ad1e-6cc8-4ce3-9617-7961d0ba3fd8)
 
 
 ## Lock Screen Notification
-![Lock Screen Notification](https://github.com/singhDevs/Musix/assets/139853742/a1f64465-7a9f-4542-b953-15387cb7b7a3)
+![Lock Screen Notification](https://github.com/singhDevs/Musix/assets/139853742/0752040d-a4a5-4b93-9249-26a6b06f2076)
