@@ -68,3 +68,6 @@ https://github.com/singhDevs/Musix/assets/139853742/f97c0eed-5fac-4aac-afa6-476c
 
 ## Lock Screen Notification
 ![Lock Screen Notification](https://github.com/singhDevs/Musix/assets/139853742/0752040d-a4a5-4b93-9249-26a6b06f2076)
+
+## Logout
+![Logout Dialog Box](https://github.com/singhDevs/Musix/assets/139853742/5aaf6ca4-a6c4-4c33-bf6a-dfe24fd6cef4)
