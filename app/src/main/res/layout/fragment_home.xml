@@ -115,11 +115,11 @@
                 android:id="@+id/playlistTxt"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="10dp"
                 android:fontFamily="@font/inter_medium"
                 android:text="@string/playlists"
                 android:textColor="@color/white"
                 android:textSize="22sp"
+                app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="@id/playlistLyt"
                 app:layout_constraintBottom_toTopOf="@id/recyclerPlaylists"/>
 
@@ -158,11 +158,11 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="10dp"
                 android:fontFamily="@font/inter_medium"
                 android:text="Browse by Language"
                 android:textColor="@color/white"
                 android:textSize="22sp"
+                app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="@id/langLyt"
                 app:layout_constraintBottom_toTopOf="@id/recyclerLanguage"/>
 
