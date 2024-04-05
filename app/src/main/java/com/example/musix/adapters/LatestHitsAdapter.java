@@ -34,17 +34,18 @@ public class LatestHitsAdapter extends RecyclerView.Adapter<LatestHitsAdapter.Vi
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
+        int adapterPosition = holder.getBindingAdapterPosition();
         Glide.with(holder.itemView.getContext())
-                .load(latestHitsList.get(position).getBanner())
+                .load(latestHitsList.get(adapterPosition).getBanner())
                 .into(holder.banner);
-        holder.title.setText(latestHitsList.get(position).getTitle());
-        holder.artist.setText(latestHitsList.get(position).getArtist());
+        holder.title.setText(latestHitsList.get(adapterPosition).getTitle());
+        holder.artist.setText(latestHitsList.get(adapterPosition).getArtist());
 
         holder.itemView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 if(onSongClickListener != null){
-                    onSongClickListener.onSongClick(latestHitsList.get(position), position);
+                    onSongClickListener.onSongClick(latestHitsList.get(adapterPosition), adapterPosition);
                 }
             }
         });
