@@ -17,6 +17,11 @@
 
 
 # Screenshots
+## Splash Screen & Login Screen
+https://github.com/singhDevs/Musix/assets/139853742/f97c0eed-5fac-4aac-afa6-476cb7ebaa41
+
+
+
 ## Home Screen
 ![Home Screen](https://github.com/singhDevs/Musix/assets/139853742/8065e191-a732-4f99-8cd1-9ae07a8168c0)
 
