@@ -17,6 +17,8 @@
 
 # Screenshots
 ## Home Screen
+![Home Screen](https://github.com/singhDevs/Musix/assets/139853742/25a0d413-5bbc-4aaa-a9ca-b76585ebbced)
+
 ![Home Screen](https://github.com/singhDevs/Musix/assets/139853742/ef275248-606a-48dd-9df6-563382c1cfbf)
 
 ## Music Player
