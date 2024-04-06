@@ -41,6 +41,9 @@ https://github.com/singhDevs/Musix/assets/139853742/f97c0eed-5fac-4aac-afa6-476c
 ## Creating a new playlist
 ![new playlist](https://github.com/singhDevs/Musix/assets/139853742/a4bfb024-408e-4544-bafc-338c1db45624)
 
+## Playlist
+![Playlist](https://github.com/singhDevs/Musix/assets/139853742/a32d23b4-cfca-49f7-94c8-fd6e72636122)
+
 
 ## About the artist
 ![about artist 1](https://github.com/singhDevs/Musix/assets/139853742/39845aa0-134a-4c33-92f4-5085e82158ae)
