@@ -30,9 +30,10 @@
         app:layout_constraintStart_toStartOf="@id/txtName"
         app:layout_constraintEnd_toEndOf="@id/txtName"
         android:fontFamily="@font/inter_semibold"
-        android:background="@drawable/edit_txt_bottom_line"
+        android:background="@drawable/bg_new_playlist_edt_txt"
         android:textColor="@color/white"
         android:textSize="25sp"
+        android:padding="5dp"
         android:layout_marginTop="5dp"/>
 
     <Button
