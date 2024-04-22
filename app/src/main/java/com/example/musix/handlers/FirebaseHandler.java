@@ -12,7 +12,9 @@ import androidx.annotation.NonNull;
 
 import com.example.musix.application.RunningApp;
 import com.example.musix.callbacks.AddToPlaylistCallback;
+import com.example.musix.callbacks.RetrieveArtist;
 import com.example.musix.callbacks.SongCheckCallback;
+import com.example.musix.models.Artist;
 import com.example.musix.models.Playlist;
 import com.example.musix.models.Song;
 import com.google.android.gms.tasks.Task;
@@ -29,6 +31,7 @@ import com.google.firebase.storage.UploadTask;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class FirebaseHandler {
     static boolean isPresent;
@@ -264,4 +267,52 @@ public class FirebaseHandler {
             }
         });
     }
+
+    public static void getArtist(String artistName, RetrieveArtist retrieveArtist){
+        DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference()
+                .child("musix")
+                .child("artist");
+
+        databaseReference.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                for(DataSnapshot snapshot1 : snapshot.getChildren()){
+                    if(artistName.equals(snapshot1.getKey())){
+                        Artist artist = snapshot1.getValue(Artist.class);
+                        retrieveArtist.onArtistRetrieved(artist);
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                retrieveArtist.onArtistRetrievalFailed(error.getMessage());
+
+            }
+        });
+    }
+
+    public static void getArtistSongs(Map<String, Boolean> songs, RetrieveArtist retrieveArtist){
+        DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference()
+                .child("songs");
+
+        databaseReference.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                List<Song> songsList = new ArrayList<>();
+                for(DataSnapshot snapshot1 : snapshot.getChildren()){
+                    if(songs.containsKey(snapshot1.getKey())){
+                        songsList.add(snapshot1.getValue(Song.class));
+                    }
+                }
+                retrieveArtist.onSongsFetched(songsList);
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                retrieveArtist.onSongsFetchedError(error.getMessage());
+            }
+        });
+    }
+
 }

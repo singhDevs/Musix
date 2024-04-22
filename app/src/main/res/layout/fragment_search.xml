@@ -33,12 +33,14 @@
                 android:id="@+id/searchBox"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="@color/white"
+                android:background="@drawable/bg_search_bar"
                 android:hint="@string/what_do_you_want_to_listen_to"
                 android:textColorHint="#38383E"
                 android:textSize="20sp"
                 android:textColor="@color/black"
-                android:padding="5dp"
+                android:paddingVertical="8dp"
+                android:paddingHorizontal="15dp"
+                android:gravity="center_vertical"
                 app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintStart_toStartOf="parent"/>
 

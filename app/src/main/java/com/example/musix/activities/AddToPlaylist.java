@@ -14,6 +14,7 @@ import android.util.TypedValue;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 import com.example.musix.R;
 import com.example.musix.adapters.AddPlaylistAdapter;
@@ -35,11 +36,12 @@ import java.util.List;
 public class AddToPlaylist extends AppCompatActivity {
     RecyclerView recyclerView;
     List<Playlist> playlists = new ArrayList<>();
-    Playlist selectedPlaylist;
+    Playlist selectedPlaylist = null;
     AddPlaylistAdapter adapter;
     Button doneBtn, newPlaylistBtn;
     ImageView backBtn;
     View prevView;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -47,7 +49,7 @@ public class AddToPlaylist extends AppCompatActivity {
 
         Intent intent = getIntent();
         Song song = intent.getParcelableExtra("song");
-        if(song == null) Log.d("TAG", "BRUHH, song is null here too!!");
+        if (song == null) Log.d("TAG", "BRUHH, song is null here too!!");
         backBtn = findViewById(R.id.backBtn);
         backBtn.setOnClickListener(view -> {
             finish();
@@ -57,10 +59,9 @@ public class AddToPlaylist extends AppCompatActivity {
         newPlaylistBtn.setOnClickListener(view -> {
             Intent intent1 = new Intent(this, NewPlaylist.class);
             intent1.putExtra("song", (Parcelable) song);
-            if(song == null) Log.d("TAG", "HERE ALSO SONG IS NULL!!");
+            if (song == null) Log.d("TAG", "HERE ALSO SONG IS NULL!!");
             startActivity(intent1);
         });
-
 
 
         recyclerView = findViewById(R.id.recyclerView);
@@ -68,16 +69,12 @@ public class AddToPlaylist extends AppCompatActivity {
         recyclerView.setLayoutManager(layoutManager);
 
         AddPlaylistAdapter.OnPlaylistClicked onPlaylistClicked = (playlist, view) -> {
-            if(selectedPlaylist == null){
+            if (selectedPlaylist == null) {
                 selectedPlaylist = playlist;
                 view.setBackgroundColor(getColor(R.color.selection));
                 prevView = view;
-            }
-            else{
+            } else {
                 selectedPlaylist = playlist;
-//                TypedValue typedValue = new TypedValue();
-//                getTheme().resolveAttribute(android.R.attr.colorPrimary, typedValue, true);
-//                int primaryColor = typedValue.data;
                 prevView.setBackgroundColor(getColor(R.color.bg_primary));
                 view.setBackground(getDrawable(R.color.selection));
                 prevView = view;
@@ -87,23 +84,30 @@ public class AddToPlaylist extends AppCompatActivity {
 
         doneBtn = findViewById(R.id.doneBtn);
         doneBtn.setOnClickListener(view -> {
-            FirebaseHandler.addSongToPlaylist(this, FirebaseDatabase.getInstance().getReference().child("playlist").child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child(selectedPlaylist.getTitle()), selectedPlaylist.getTitle(), song, new AddToPlaylistCallback() {
-                @Override
-                public void OnAddedToPlaylist() {}
+            if(selectedPlaylist != null) {
+                FirebaseHandler.addSongToPlaylist(this, FirebaseDatabase.getInstance().getReference().child("playlist").child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child(selectedPlaylist.getTitle()), selectedPlaylist.getTitle(), song, new AddToPlaylistCallback() {
+                    @Override
+                    public void OnAddedToPlaylist() {
+                    }
 
-                @Override
-                public void OnSongAddedToPlaylist() {
-                    finish();
-                }
-            });
+                    @Override
+                    public void OnSongAddedToPlaylist() {
+                        finish();
+                    }
+                });
+            }
+            else{
+                Toast.makeText(this, "No playlist selected", Toast.LENGTH_SHORT).show();
+            }
         });
+
 
         adapter = new AddPlaylistAdapter(playlists, onPlaylistClicked);
         recyclerView.setAdapter(adapter);
         new GetPlaylistTask(playlists -> {
             Log.d("TAG", "in callback, playlist size: " + playlists.size() + "\nPlaylist Data:-\n");
-            for(Playlist playlist : playlists){
-                if(playlist != null)
+            for (Playlist playlist : playlists) {
+                if (playlist != null)
                     Log.d("TAG", "" + playlist.getTitle());
             }
         }).execute();
@@ -130,7 +134,7 @@ public class AddToPlaylist extends AppCompatActivity {
             databaseReference.addListenerForSingleValueEvent(new ValueEventListener() {
                 @Override
                 public void onDataChange(@NonNull DataSnapshot snapshot) {
-                    for(DataSnapshot dataSnapshot : snapshot.getChildren()){
+                    for (DataSnapshot dataSnapshot : snapshot.getChildren()) {
                         Playlist playlist = dataSnapshot.getValue(Playlist.class);
                         playlistList.add(playlist);
                     }
@@ -149,7 +153,7 @@ public class AddToPlaylist extends AppCompatActivity {
         }
     }
 
-    public class AddSongToPlaylist extends AsyncTask<Void, Void, Void>{
+    public class AddSongToPlaylist extends AsyncTask<Void, Void, Void> {
 
         @Override
         protected Void doInBackground(Void... voids) {
@@ -162,8 +166,6 @@ public class AddToPlaylist extends AppCompatActivity {
                     .child("playlist")
                     .child(FirebaseAuth.getInstance().getCurrentUser().getUid())
                     .child(selectedPlaylist.getTitle());
-
-//            databaseReference
         }
     }
 }

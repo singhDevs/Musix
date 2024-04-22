@@ -1,12 +1,8 @@
 package com.example.musix.activities;
 
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.localbroadcastmanager.content.LocalBroadcastManager;
-
 import android.annotation.SuppressLint;
 import android.app.NotificationManager;
 import android.content.BroadcastReceiver;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -15,7 +11,6 @@ import android.media.AudioManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.IBinder;
 import android.os.Looper;
 import android.os.Parcelable;
 import android.util.Log;
@@ -24,7 +19,9 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
-import android.widget.Toast;
+
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.bumptech.glide.Glide;
 import com.example.musix.Notification.MusicPlayerNotificationService;
@@ -39,17 +36,11 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.firebase.auth.FirebaseAuth;
 import com.makeramen.roundedimageview.RoundedImageView;
 
-import org.jetbrains.annotations.Contract;
-
-import java.io.Serializable;
 import java.util.HashMap;
 import java.util.List;
 
-import kotlin.internal.LowPriorityInOverloadResolution;
-
 public class NewMusicPlayer extends AppCompatActivity {
-    private NotificationManager notificationManager;
-    private MusicPlayerNotificationService notificationService;
+    private MusicPlayerNotificationService musicPlayerNotificationService;
     private AudioManager audioManager;
     private Song song;
     private List<Song> songList;
@@ -81,7 +72,7 @@ public class NewMusicPlayer extends AppCompatActivity {
     private final BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            Log.d("broadcast", "Song Changed Broadcast received");
+            Log.d("TAG", "Song Changed Broadcast received");
             if (intent.getAction() != null && intent.getAction().equals(MusicService.SONG_CHANGED)) {
                 songPosition = intent.getIntExtra("songPosition", 0);
                 Log.d("TAG", "song Position: " + songPosition);
@@ -116,17 +107,29 @@ public class NewMusicPlayer extends AppCompatActivity {
 
         Log.d("TAG", "calling 3 functions...");
         fetchIntentData();
-        initializeUI();
         setUpMusicService();
+        initializeUI();
 
         backBtn.setOnClickListener(view -> {
             onBackPressed();
         });
 
         playBtn.setOnClickListener(view -> {
-            if (musicStatus == PAUSED_MUSIC) {
+            if (musicService.getMusicStatus() == PLAYING_MUSIC) {
+                pauseMusic();
+                Log.d("TAG", "Saving PAUSE state...");
+                int play = MusicService.PAUSED_MUSIC;
+                int shuffle = musicPlayerSettings.getShuffleSetting();
+                int repeat = musicPlayerSettings.getRepeatSetting();
+                musicPlayerSettings.saveSettings(play, shuffle, repeat);
+            } else{
                 playMusic();
-            } else if (musicStatus == PLAYING_MUSIC) pauseMusic();
+                Log.d("TAG", "Saving PLAY state...");
+                int play = MusicService.PLAYING_MUSIC;
+                int shuffle = musicPlayerSettings.getShuffleSetting();
+                int repeat = musicPlayerSettings.getRepeatSetting();
+                musicPlayerSettings.saveSettings(play, shuffle, repeat);
+            }
         });
 
         nextBtn.setOnClickListener(view -> {
@@ -154,6 +157,15 @@ public class NewMusicPlayer extends AppCompatActivity {
             }
         });
 
+        songArtist.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent1 = new Intent(getApplicationContext(), ArtistActivity.class);
+                intent1.putExtra("artist_name", songList.get(songPosition).getArtist());
+                startActivity(intent1);
+            }
+        });
+
         shuffleBtn.setOnClickListener(view -> {
             if (shuffleStatus == NO_SHUFFLE) {
                 shuffleStatus = SHUFFLE;
@@ -164,7 +176,7 @@ public class NewMusicPlayer extends AppCompatActivity {
                 musicService.setShuffleStatus(MusicService.NO_SHUFFLE);
                 shuffleBtn.setImageResource(R.drawable.no_shuffle);
             }
-            musicPlayerSettings.saveSettings(shuffleStatus, repeatState);
+            musicPlayerSettings.saveSettings(musicService.getMusicStatus(), shuffleStatus, repeatState);
         });
 
         repeatBtn.setOnClickListener(view -> {
@@ -181,7 +193,7 @@ public class NewMusicPlayer extends AppCompatActivity {
                 repeatState = NOT_REPEATED;
                 musicService.setRepeatStatus(MusicService.NOT_REPEATED);
             }
-            musicPlayerSettings.saveSettings(shuffleStatus, repeatState);
+            musicPlayerSettings.saveSettings(musicService.getMusicStatus(), shuffleStatus, repeatState);
         });
 
         moreBtn.setOnClickListener(view -> {
@@ -199,7 +211,12 @@ public class NewMusicPlayer extends AppCompatActivity {
         addToPlaylist.setOnClickListener(view -> {
             Intent intent1 = new Intent(this, AddToPlaylist.class);
             intent1.putExtra("song", (Parcelable) songList.get(songPosition));
-            if (song == null) Log.d("TAG", "Lol DEWD");
+            startActivity(intent1);
+        });
+        LinearLayout aboutArtist = findViewById(R.id.aboutArtist);
+        aboutArtist.setOnClickListener(view -> {
+            Intent intent1 = new Intent(this, ArtistActivity.class);
+            intent1.putExtra("artist_name", songList.get(songPosition).getArtist());
             startActivity(intent1);
         });
 
@@ -290,16 +307,25 @@ public class NewMusicPlayer extends AppCompatActivity {
     private void fetchIntentData() {
         Log.d("TAG", "inside fetch Intent Data");
         Intent intent = getIntent();
-        songList = (List<Song>) intent.getSerializableExtra("songList");
-        songPosition = intent.getIntExtra("songPosition", 0);
-        uid = intent.getStringExtra("currentUser");
-        playlistTitle = intent.getStringExtra("playlistName");
-        songURL = intent.getStringExtra("songUrl");
-        Log.d("TAG", "in NEW PLAYER song URL: " + songURL);
+
+        if (intent != null && intent.hasExtra("notificationSongList")) {
+            String msg = intent.getStringExtra("notificationSongList");
+
+        }
+        else{
+            songList = (List<Song>) intent.getSerializableExtra("songList");
+            songPosition = intent.getIntExtra("songPosition", 0);
+            uid = intent.getStringExtra("currentUser");
+            playlistTitle = intent.getStringExtra("playlistName");
+            songURL = intent.getStringExtra("songUrl");
+            Log.d("TAG", "in NEW PLAYER song URL: " + songURL);
+        }
     }
 
     private void initializeUI() {
         Log.d("TAG", "inside initialize UI");
+
+        musicPlayerNotificationService = new MusicPlayerNotificationService(getApplicationContext(), songList.get(songPosition), R.drawable.ic_pause);
         playlistName = findViewById(R.id.playlistName);
         songTitle = findViewById(R.id.songTitle);
         songArtist = findViewById(R.id.songArtist);
@@ -317,7 +343,7 @@ public class NewMusicPlayer extends AppCompatActivity {
 
         if (musicService == null) Log.d("TAG", "music Service is NULL!");
         else Log.d("TAG", "music Service is NOT NULL!");
-        musicService.setMusicStatus(MusicService.PLAYING_MUSIC);
+        musicService.setMusicStatus(musicPlayerSettings.getPlaySetting());
         musicService.setRepeatStatus(musicPlayerSettings.getRepeatSetting());
         musicService.setShuffleStatus(musicPlayerSettings.getShuffleSetting());
         playBtn = findViewById(R.id.playBtn);
@@ -347,6 +373,16 @@ public class NewMusicPlayer extends AppCompatActivity {
             repeatBtn.setImageResource(R.drawable.repeat);
         } else {
             repeatBtn.setImageResource(R.drawable.repeat_one);
+        }
+
+        //setting up play button
+        if(musicService.getMusicStatus() == PLAYING_MUSIC) {
+            Log.d("TAG", "setting up PAUSE img on play btn...");
+            playBtn.setImageResource(R.drawable.ic_pause_filled);
+        }
+        else {
+            Log.d("TAG", "setting up PLAY img on play btn...");
+            playBtn.setImageResource(R.drawable.ic_play_filled);
         }
 
         songTitle.setSelected(true);    //for Marquee
@@ -421,7 +457,16 @@ public class NewMusicPlayer extends AppCompatActivity {
         songDuration.setText(formatTime(song.getDurationInSeconds()));
         seekbar.setMax(song.getDurationInSeconds());
         setBanner(song.getBanner(), songBanner);
-        playBtn.setImageResource(R.drawable.ic_pause_filled);
+
+        //setting up play button
+        if(musicService.getMusicStatus() == PLAYING_MUSIC) {
+            Log.d("TAG", "setting up PAUSE img on play btn...");
+            playBtn.setImageResource(R.drawable.ic_pause_filled);
+        }
+        else {
+            Log.d("TAG", "setting up PLAY img on play btn...");
+            playBtn.setImageResource(R.drawable.ic_play_filled);
+        }
 
         bottomTitle.setText(song.getTitle());
         bottomArtist.setText(song.getArtist());
