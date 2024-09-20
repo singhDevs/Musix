@@ -23,11 +23,14 @@ import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
+import com.example.musix.Constants;
 import com.example.musix.R;
 import com.example.musix.application.RunningApp;
 import com.example.musix.databinding.ActivityMainBinding;
@@ -90,6 +93,11 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        requestWindowFeature( Window.FEATURE_NO_TITLE );
+        getWindow().setFlags( WindowManager.LayoutParams.FLAG_FULLSCREEN,
+                WindowManager.LayoutParams.FLAG_FULLSCREEN );
+
         setContentView(R.layout.activity_main);
 
         binding = ActivityMainBinding.inflate(getLayoutInflater());
@@ -120,8 +128,8 @@ public class MainActivity extends AppCompatActivity {
         songTxtArtist.setSelected(true);
 
         Log.d("songBar", "2.songBar visi: " + songBar.getVisibility());
-        if (musicService != null && musicService.getMusicStatus() != MusicService.NOT_STARTED) {
-            Log.d("songBar", "2.music Status: " + musicService.getMusicStatus());
+        if (musicService != null && Constants.INSTANCE.getMusicStatus() != MusicService.NOT_STARTED) {
+            Log.d("songBar", "2.music Status: " + Constants.INSTANCE.getMusicStatus());
             setUpSongBar();
         }
 
@@ -155,23 +163,23 @@ public class MainActivity extends AppCompatActivity {
         playBtn.setOnClickListener(v -> {
             Log.d("TAG", "playButton clicked!");
             if(musicService!= null) {
-                if (musicService.getMusicStatus() == MusicService.PLAYING_MUSIC) {
-                    musicService.setMusicStatus(MusicService.PAUSED_MUSIC);
+                if (Constants.INSTANCE.getMusicStatus() == MusicService.PLAYING_MUSIC) {
+                    Constants.INSTANCE.setMusicStatus(MusicService.PAUSED_MUSIC);
                     Log.d("TAG", "Found PLAYING, setting PAUSED state...");
                     int play = MusicService.PAUSED_MUSIC;
                     int shuffle = musicPlayerSettings.getShuffleSetting();
                     int repeat = musicPlayerSettings.getRepeatSetting();
                     musicPlayerSettings.saveSettings(play, shuffle, repeat);
-                    musicService.pauseMusic();
+//                    musicService.pauseMusic();
                     playBtn.setImageResource(R.drawable.ic_play_arrow);
                 } else {
-                    musicService.setMusicStatus(MusicService.PLAYING_MUSIC);
+                    Constants.INSTANCE.setMusicStatus(MusicService.PLAYING_MUSIC);
                     Log.d("TAG", "Found PAUSED, setting PLAY state...");
                     int play = MusicService.PLAYING_MUSIC;
                     int shuffle = musicPlayerSettings.getShuffleSetting();
                     int repeat = musicPlayerSettings.getRepeatSetting();
                     musicPlayerSettings.saveSettings(play, shuffle, repeat);
-                    musicService.playMusic();
+//                    musicService.playMusic();
                     playBtn.setImageResource(R.drawable.ic_pause);
                 }
             }
@@ -228,7 +236,7 @@ public class MainActivity extends AppCompatActivity {
         if (runningApp != null) {
             Log.d("TAG", "inside MainActivity, initializing music service in Music Player & Service Connection");
             musicService = runningApp.getMusicService();
-            serviceConnection = runningApp.getServiceConnection();
+//            serviceConnection = runningApp.getServiceConnection();
         } else {
             Log.d("TAG", "inside Main Activity, Running App is NULL");
         }
@@ -246,7 +254,7 @@ public class MainActivity extends AppCompatActivity {
                 .load(songBanner)
                 .into(songImgBanner);
 
-        if (musicService != null && musicService.getMusicStatus() == MusicService.PLAYING_MUSIC)
+        if (musicService != null && Constants.INSTANCE.getMusicStatus() == MusicService.PLAYING_MUSIC)
             playBtn.setImageResource(R.drawable.ic_pause);
         else
             playBtn.setImageResource(R.drawable.ic_play_arrow);
@@ -270,25 +278,6 @@ public class MainActivity extends AppCompatActivity {
             }
         });
     }
-
-    private final BottomNavigationView.OnNavigationItemSelectedListener navigationItemSelectedListener =
-            new BottomNavigationView.OnNavigationItemSelectedListener() {
-                @Override
-                public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-                    int itemId = item.getItemId();
-                    FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-
-                    if (itemId == R.id.nav_home) {
-                        fragmentTransaction.replace(currentFragmentId, new HomeFragment());
-                    } else if (itemId == R.id.nav_search) {
-                        fragmentTransaction.replace(currentFragmentId, new SearchFragment());
-                    } else if (itemId == R.id.nav_files) {
-                        fragmentTransaction.replace(currentFragmentId, new FilesFragment());
-                    }
-                    fragmentTransaction.commit();
-                    return true;
-                }
-            };
 
     private class SetLikeState extends AsyncTask<Void, Void, Void> {
         @Override
@@ -330,24 +319,24 @@ public class MainActivity extends AppCompatActivity {
             getMusicService();
 
             if(musicService != null){
-                if (musicService.getMusicStatus() == MusicService.PLAYING_MUSIC) {
-                    musicService.setMusicStatus(MusicService.PAUSED_MUSIC);
+                if (Constants.INSTANCE.getMusicStatus() == MusicService.PLAYING_MUSIC) {
+                    Constants.INSTANCE.setMusicStatus(MusicService.PAUSED_MUSIC);
                     Log.d("TAG", "Found PLAYING, setting PAUSED state...");
                     int play = MusicService.PAUSED_MUSIC;
                     int shuffle = musicPlayerSettings.getShuffleSetting();
                     int repeat = musicPlayerSettings.getRepeatSetting();
                     musicPlayerSettings.saveSettings(play, shuffle, repeat);
-                    musicService.pauseMusic();
+//                    musicService.pauseMusic();
                     playBtn.setImageResource(R.drawable.ic_play_arrow);
                 }
                 else {
-                    musicService.setMusicStatus(MusicService.PLAYING_MUSIC);
+                    Constants.INSTANCE.setMusicStatus(MusicService.PLAYING_MUSIC);
                     Log.d("TAG", "Found PAUSED, setting PLAY state...");
                     int play = MusicService.PLAYING_MUSIC;
                     int shuffle = musicPlayerSettings.getShuffleSetting();
                     int repeat = musicPlayerSettings.getRepeatSetting();
                     musicPlayerSettings.saveSettings(play, shuffle, repeat);
-                    musicService.playMusic();
+//                    musicService.playMusic();
                     playBtn.setImageResource(R.drawable.ic_pause);
                 }
             }
@@ -363,7 +352,6 @@ public class MainActivity extends AppCompatActivity {
         super.onDestroy();
         if (broadcastReceiver != null) {
             LocalBroadcastManager.getInstance(this).unregisterReceiver(broadcastReceiver);
-
         }
     }
 }

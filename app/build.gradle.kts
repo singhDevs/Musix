@@ -61,7 +61,14 @@ dependencies {
     implementation("com.google.android.exoplayer:exoplayer:2.15.0")
     implementation("com.github.bumptech.glide:glide:4.14.2")
 
-    implementation("androidx.media:media:1.1.0")
+    // For media playback using ExoPlayer
+    implementation("androidx.media3:media3-exoplayer:1.4.0")
+    implementation("androidx.media3:media3-exoplayer-dash:1.4.0")
+    implementation("androidx.media3:media3-ui:1.4.0")
+    implementation("androidx.media3:media3-session:1.4.0")
+
+
+
     implementation("org.jetbrains.kotlin:kotlin-stdlib:1.9.22")
     implementation("com.github.ismaeldivita:chip-navigation-bar:1.4.0")
     implementation("com.facebook.shimmer:shimmer:0.5.0")

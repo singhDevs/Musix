@@ -14,7 +14,6 @@ import androidx.room.Room
 import com.example.musix.database.LikedSongsDatabase
 import com.example.musix.models.Song
 import com.example.musix.services.MusicService
-import com.example.musix.services.MusicService.LocalBinder
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
@@ -30,14 +29,14 @@ import kotlin.coroutines.suspendCoroutine
 
 class RunningApp: Application() {
     private var musicService: MusicService? = null
-    private var serviceConnection: ServiceConnection? = null
+//    private var serviceConnection: ServiceConnection? = null
     lateinit var database: LikedSongsDatabase
     lateinit var likedSongsRepository: LikedSongsRepository
 
     override fun onCreate() {
         super.onCreate()
-        setServiceConnection()
 
+//        setServiceConnection()
         GlobalScope.launch{
             Log.d("TAG", "inside coroutine, calling imp functions...")
             initDatabase()
@@ -48,7 +47,7 @@ class RunningApp: Application() {
         }
     }
 
-    private suspend fun initDatabase() {
+    private fun initDatabase() {
         database = Room.databaseBuilder(
             applicationContext,
             LikedSongsDatabase::class.java,
@@ -60,7 +59,7 @@ class RunningApp: Application() {
 
     private fun startMusicService(){
         val serviceIntent = Intent(this, MusicService::class.java)
-        bindService(serviceIntent, serviceConnection!!, Context.BIND_AUTO_CREATE)
+//        bindService(serviceIntent, serviceConnection!!, Context.BIND_AUTO_CREATE)
         startService(serviceIntent)
     }
 
@@ -74,6 +73,7 @@ class RunningApp: Application() {
         Log.d("TAG", "musicService is now: ${this@RunningApp.musicService}")
     }
 
+    /**
     fun getServiceConnection(): ServiceConnection?{
         return serviceConnection
     }
@@ -83,8 +83,9 @@ class RunningApp: Application() {
             override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
                 Log.d("TAG", "onServiceConnected called")
                 val binder = service as LocalBinder
+
                 if(binder.getServiceInstance() == null) Log.d("TAG", "binder is NULL")
-                setMusicService(binder.getServiceInstance())
+                else setMusicService(binder.getServiceInstance())
             }
 
             override fun onServiceDisconnected(name: ComponentName?) {
@@ -92,12 +93,13 @@ class RunningApp: Application() {
             }
         }
     }
+*/
 
     override fun onTerminate() {
         super.onTerminate()
         stopService(Intent(this, MusicService::class.java))
-        unbindService(serviceConnection!!)
-        serviceConnection = null
+//        unbindService(serviceConnection!!)
+//        serviceConnection = null
         musicService = null
     }
 
@@ -176,6 +178,4 @@ class RunningApp: Application() {
             }
         }
     }
-
-
 }

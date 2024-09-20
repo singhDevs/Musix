@@ -1,23 +1,49 @@
-package com.example.musix.services
+@file:OptIn(UnstableApi::class) package com.example.musix.services
 
 import android.app.NotificationManager
-import android.app.Service
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.os.Binder
+import android.os.Bundle
 import android.os.IBinder
 import android.util.Log
+import androidx.annotation.OptIn
+import androidx.core.content.ContextCompat
+import androidx.core.net.toUri
+import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.common.Player
+import androidx.media3.common.MediaItem
+import androidx.media3.session.MediaSession
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
-import com.example.musix.Notification.MusicPlayerNotificationService
+import androidx.media3.common.ForwardingPlayer
+import androidx.media3.common.MediaMetadata
+import androidx.media3.common.util.UnstableApi
+import androidx.media3.session.CommandButton
+import androidx.media3.session.MediaController
+import androidx.media3.session.MediaController.releaseFuture
+import androidx.media3.session.MediaSession.ConnectionResult.AcceptedResultBuilder
+import androidx.media3.session.MediaSessionService
+import androidx.media3.session.SessionCommand
+import androidx.media3.session.SessionCommands
+import androidx.media3.session.SessionResult
+import androidx.media3.session.SessionToken
+import com.example.musix.Constants
+//import com.example.musix.notification.MusicPlayerNotificationService
 import com.example.musix.R
+import com.example.musix.application.RunningApp
+//import com.example.musix.activities.NewMusicPlayer.mediaController
+import com.example.musix.handlers.FirebaseHandler
 import com.example.musix.models.Song
-import com.google.android.exoplayer2.ExoPlayer
-import com.google.android.exoplayer2.MediaItem
-import com.google.android.exoplayer2.Player
-import com.google.android.exoplayer2.SimpleExoPlayer
+import com.google.common.collect.ImmutableList
+import com.google.common.util.concurrent.Futures
+import com.google.common.util.concurrent.ListenableFuture
+import com.google.firebase.auth.FirebaseAuth
 import java.io.Serializable
 
-class MusicService(): Service()
+private const val TAG = "Musix"
+
+class MusicService: MediaSessionService()
 {
     companion object{
         const val NOT_STARTED: Int = 0
@@ -28,43 +54,181 @@ class MusicService(): Service()
         const val REPEAT_ONE = 2
         const val NO_SHUFFLE = 0
         const val SHUFFLE = 1
+
+        const val SAVE_TO_LIKED = "save_to_liked"
+        const val REMOVE_FROM_LIKED = "remove_from_liked"
+        const val PLAY_NEXT = "play_next"
+        const val PLAY_PREV = "play_prev"
+
         val song = Song("", "", "", "", "", 0, "", 0, "")
         const val SONG_CHANGED = "com.example.musix.models.Song"
         const val PLAYER_PLAYING = "player_ready"
+        fun mediaItemBuilder(song: Song){
+            Log.d(TAG, "mediaItemBuilder called for: ${song.title}")
+            val mediaItem = MediaItem.Builder()
+                .setUri(song.id)
+                .setMediaId(song.key)
+                .setMediaMetadata(
+                    MediaMetadata.Builder()
+                        .setTitle(song.title)
+                        .setArtist(song.artist)
+                        .setArtworkUri(song.banner.toUri())
+                        .setDurationMs(song.durationInSeconds*1000L)
+                        .build()
+                ).build()
+            Constants.mediaController?.setMediaItem(mediaItem)
+        }
     }
+
     private var isServiceRunning = false
     private var sameSong = false
-    var musicStatus: Int = NOT_STARTED
-    var repeatStatus: Int = NOT_REPEATED
-    var shuffleStatus: Int = NO_SHUFFLE
+
     val context: Context = this
     private var playlistName: String = "Default"
     private lateinit var songList: List<Song?>
     private var songPosition: Int = 0
     private lateinit var player: ExoPlayer
-    private val mBinder: IBinder = LocalBinder(this)
+    private var mediaSession: MediaSession? = null
+    private lateinit var controllerFuture : ListenableFuture<MediaController>
     private var songURL: String = ""
     private lateinit var notificationManager: NotificationManager
+    private lateinit var sessionToken: SessionToken
 
-    override fun onBind(intent: Intent?): IBinder? {
+    private val likeButton = CommandButton.Builder()
+        .setIconResId(R.drawable.heart_outline)
+        .setDisplayName("Add to Liked songs")
+        .setSessionCommand(SessionCommand(SAVE_TO_LIKED, Bundle().apply { putString("songKey", mediaSession?.player?.currentMediaItem?.mediaId.toString()) }))
+        .build()
 
-        return mBinder
+    private val unlikeButton = CommandButton.Builder()
+        .setIconResId(R.drawable.heart_filled)
+        .setDisplayName("Remove from Liked songs")
+        .setSessionCommand(SessionCommand(REMOVE_FROM_LIKED, Bundle()))
+        .build()
+
+    private val playNext = CommandButton.Builder()
+        .setIconResId(R.drawable.ic_next)
+        .setDisplayName("Play Next")
+        .setSessionCommand(SessionCommand(PLAY_NEXT, Bundle()))
+        .build()
+
+    private val playPrev = CommandButton.Builder()
+        .setIconResId(R.drawable.ic_previous)
+        .setDisplayName("Play Next")
+        .setSessionCommand(SessionCommand(PLAY_PREV, Bundle()))
+        .build()
+
+    override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaSession? = mediaSession
+
+    @OptIn(UnstableApi::class) override fun onCreate() {
+        super.onCreate()
+
+
+//        val forwardingPlayer = object : ForwardingPlayer(player) {
+//            override fun seekToNext() {
+//                super.seekToNext()
+//            }
+//
+//            override fun seekForward() {
+//                super.seekForward()
+//            }
+//        }
+
+        player = ExoPlayer.Builder(this).build()
+        mediaSession = MediaSession.Builder(this, player)
+            .setCallback(MediaCallback())
+            .setCustomLayout(ImmutableList.of(playPrev, playNext))
+            .build()
+
+        Log.d(TAG, "Setting up Media Controller...")
+        sessionToken = SessionToken(context, ComponentName(context, MusicService::class.java))
+        controllerFuture =
+            MediaController.Builder(context, sessionToken).buildAsync()
+        controllerFuture.addListener({
+            Constants.mediaController = controllerFuture.get()
+            Constants.mediaControllerCallback?.onMediaControllerAvailable()
+        }, ContextCompat.getMainExecutor(this))
+
+//        songList = listOf(song)
+//        isServiceRunning = true
     }
 
+    private inner class MediaCallback : MediaSession.Callback{
+        @OptIn(UnstableApi::class) override fun onConnect(
+            session: MediaSession,
+            controller: MediaSession.ControllerInfo
+        ): MediaSession.ConnectionResult {
+            // Set available player and session commands.
+            val songId: Bundle = Bundle().apply {
+                putString("song_id", session.player.currentMediaItem?.mediaId)
+            }
+            val sessionCommands = SessionCommands.Builder()
+                .add(SessionCommand(SAVE_TO_LIKED, songId))
+                .build()
+            return AcceptedResultBuilder(session)
+                .setAvailableSessionCommands(sessionCommands)
+                .build()
+        }
+
+        override fun onCustomCommand(
+            session: MediaSession,
+            controller: MediaSession.ControllerInfo,
+            customCommand: SessionCommand,
+            args: Bundle
+        ): ListenableFuture<SessionResult> {
+            if (customCommand.customAction == SAVE_TO_LIKED) {
+                saveToFavorites(session.player.currentMediaItem)
+                return Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS))
+            }
+            return super.onCustomCommand(session, controller, customCommand, args)
+        }
+    }
+
+    private fun saveToFavorites(mediaItem: MediaItem?) {
+        Log.d(TAG, "Saving to favorites: ${mediaItem?.mediaMetadata?.title}")
+        val uid = FirebaseAuth.getInstance().currentUser?.uid
+//        FirebaseHandler.addLikedSong(this, playlistName, uid, mediaItem.mediaId, applicationContext as RunningApp)
+        mediaSession?.setCustomLayout(ImmutableList.of(unlikeButton))
+    }
+
+    override fun onTaskRemoved(rootIntent: Intent?) {
+        val player = mediaSession?.player!!
+        if (!player.playWhenReady
+            || player.mediaItemCount == 0
+            || player.playbackState == Player.STATE_ENDED) {
+            /**
+             * Stop the service if not playing, continue playing in the background otherwise.
+              */
+            stopSelf()
+        }
+    }
+
+    override fun onDestroy() {
+        mediaSession?.run {
+            player.release()
+            releaseFuture(controllerFuture)
+            release()
+            mediaSession = null
+        }
+        super.onDestroy()
+    }
+}
+
+
+/**
+    private val mBinder: IBinder = LocalBinder(this)
+        override fun onBind(intent: Intent?): IBinder {
+            super.onBind(intent)
+            return mBinder
+    }
     class LocalBinder(private val musicService: MusicService): Binder(){
         fun getServiceInstance(): MusicService{
             return musicService
         }
     }
 
-    override fun onCreate() {
-        super.onCreate()
-        player = SimpleExoPlayer.Builder(context).build()
-        songList = listOf(song)
-        isServiceRunning = true
-    }
-
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        super.onStartCommand(intent, flags, startId)
         if(intent != null){
             Log.d("TAG", "inside INTENT");
             playlistName = intent.getStringExtra("playlistName").toString() ?: ""
@@ -77,8 +241,8 @@ class MusicService(): Service()
         }
 
         if(songList[0] != song){
-            songList[songPosition]?.let { initializePlayer(it.id) }
-            if(!sameSong) songList[songPosition]?.let { initializePlayer(it.id) }
+            songList[songPosition]?.let { initializePlayer(it) }
+            if(!sameSong) songList[songPosition]?.let { initializePlayer(it) }
         }
         return START_STICKY
     }
@@ -87,59 +251,56 @@ class MusicService(): Service()
         Log.d("TAG", "fetchData called...");
         if(this@MusicService.songList != songList) Log.d("TAG", "songList are not same!!")
         else Log.d("TAG", "songList are same!!")
-        //TODO: add equality check on songList as well
-        //TODO: add equality check on songList as well
-        // need not to reinitialize already playing song in song bar
-        // need to check if the song playing is the same song clicked...
+
         if(this@MusicService.songList[this@MusicService.songPosition]?.key != songList[songPosition]?.key){
             Log.d("TAG", "Key NOT SAME, reinitializing player...");
             this@MusicService.songList = songList
             this@MusicService.songPosition = songPosition
             this@MusicService.playlistName = playlistName
             resetPlayer()
-            songList[songPosition]?.let { initializePlayer(it.id) }
+            songList[songPosition]?.let { initializePlayer(it) }
         }
         else{
             Log.d("TAG", "Key is SAME, song continues to play...");
         }
-//        if(this@MusicService.songList[0] != songList[0] && this@MusicService.songPosition == songPosition && this@MusicService.playlistName == playlistName){
-//            Log.d("TAG", "sameSong set TRUE")
-//            // temporary provision
-//            this@MusicService.songList = songList
-//            this@MusicService.songPosition = songPosition
-//            this@MusicService.playlistName = playlistName
-//            resetPlayer()
-//            songList[songPosition]?.let { initializePlayer(it.id) }
-//            sameSong = true
-//        }
-//        else{
-//            Log.d("TAG", "\n\nsameSong set FALSE")
-//            sameSong = false
-//            this@MusicService.songList = songList
-//            this@MusicService.songPosition = songPosition
-//            this@MusicService.playlistName = playlistName
-//            resetPlayer()
-//            songList[songPosition]?.let { initializePlayer(it.id) }
-//        }
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        releasePlayer()
-    }
+//    override fun onDestroy() {
+//        super.onDestroy()
+//        releasePlayer()
+//    }
 
-    private fun initializePlayer(songUri: String) {
+    private fun initializePlayer(song: Song) {
         Log.d("TAG", "------------------------Initializing Player------------------------")
         Log.d("TAG", "Song Pos: " + songPosition + "\t\tSong: " + songList.get(songPosition)?.title)
         Log.d("TAG", "setting Notification in init player...")
         notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         val musicPlayerNotificationService = songList[songPosition]?.let { MusicPlayerNotificationService(applicationContext, it, R.drawable.ic_pause) }
         val notification = musicPlayerNotificationService!!.getNotification()
-        notificationManager.notify(1, notification)
-        startForeground(1, notification)
+//        notificationManager.notify(1, notification)
+//        startForeground(1, notification)
 
-        val mediaItem = MediaItem.fromUri(songUri)
-        player.setMediaItem(mediaItem)
+//        val mediaItem = MediaItem.fromUri(songUri)
+
+        val mediaItem =
+            MediaItem.Builder()
+                .setMediaId("media-1")
+                .setUri(song.id)
+                .setMediaMetadata(
+                    MediaMetadata.Builder()
+                        .setArtist(song.artist)
+                        .setTitle(song.title)
+                        .setArtworkUri(song.banner.toUri())
+                        .build()
+                )
+                .build()
+
+        mediaController?.let {
+            it.setMediaItem(mediaItem)
+            it.prepare()
+            it.play()
+        }
+
         player.addListener(object : Player.Listener{
             override fun onPlaybackStateChanged(playbackState: Int) {
                 super.onPlaybackStateChanged(playbackState)
@@ -177,8 +338,8 @@ class MusicService(): Service()
                 LocalBroadcastManager.getInstance(this@MusicService).sendBroadcast(intent)
             }
         })
-        player.prepare()
-        player.play()
+//        player.prepare()
+//        player.play()
         musicStatus = PLAYING_MUSIC
         Log.d("TAG", "------------------------initialize player ends------------------------")
     }
@@ -191,8 +352,8 @@ class MusicService(): Service()
         notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         val musicPlayerNotificationService = songList[songPosition]?.let { MusicPlayerNotificationService(applicationContext, it, R.drawable.ic_pause) }
         val notification = musicPlayerNotificationService!!.getNotification()
-        notificationManager.notify(1, notification)
-        startForeground(1, notification)
+//        notificationManager.notify(1, notification)
+//        startForeground(1, notification)
         Log.d("TAG", "PLaying music from Service")
     }
 
@@ -210,8 +371,8 @@ class MusicService(): Service()
         notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         val musicPlayerNotificationService = songList[songPosition]?.let { MusicPlayerNotificationService(applicationContext, it, R.drawable.ic_play_arrow) }
         val notification = musicPlayerNotificationService!!.getNotification()
-        notificationManager.notify(1, notification)
-        startForeground(1, notification)
+//        notificationManager.notify(1, notification)
+//        startForeground(1, notification)
         Log.d("TAG", "Music Paused in Service")
     }
 
@@ -229,18 +390,18 @@ class MusicService(): Service()
                 songPosition = randomPosition
 
                 Log.d("TAG", "ALERT1: init player using songPos: " + songPosition)
-                songList[songPosition]?.let { initializePlayer(it.id) }
+                songList[songPosition]?.let { initializePlayer(it) }
 //                    setUpUI(songList[songPosition])
             } else {
                 if (songPosition < songList.size - 1) {
                     resetPlayer()
                     Log.d("TAG", "ALERT2: init player using songPos: " + (songPosition + 1))
-                    songList[++songPosition]?.let { initializePlayer(it.id) }
+                    songList[++songPosition]?.let { initializePlayer(it) }
 //                        setUpUI(songList[songPosition])
                 } else {
                     resetPlayer()
                     Log.d("TAG", "ALERT3: init player using songPos: " + 0)
-                    songList[0]?.let { initializePlayer(it.id) }
+                    songList[0]?.let { initializePlayer(it) }
 //                        setUpUI(songList[0])
                     songPosition = 0
                 }
@@ -257,13 +418,13 @@ class MusicService(): Service()
                 }
                 songPosition = randomPosition
                 Log.d("TAG", "ALERT4: init player using songPos: " + songPosition)
-                songList[songPosition]?.let { initializePlayer(it.id) }
+                songList[songPosition]?.let { initializePlayer(it) }
 //                    setUpUI(songList[songPosition])
             } else {
                 if (songPosition < songList.size - 1) {
                     resetPlayer()
                     Log.d("TAG", "ALERT5: init player using songPos: " + (songPosition + 1))
-                    songList[++songPosition]?.let { initializePlayer(it.id) }
+                    songList[++songPosition]?.let { initializePlayer(it) }
 //                        setUpUI(songList[songPosition])
                 } else {
                     resetPlayer()
@@ -282,7 +443,7 @@ class MusicService(): Service()
                 playMusic()
             } else {
                 resetPlayer()
-                songList[--songPosition]?.let { initializePlayer(it.id) }
+                songList[--songPosition]?.let { initializePlayer(it) }
 //                    setUpUI(songList[songPosition])
             }
         } else {
@@ -308,4 +469,6 @@ class MusicService(): Service()
         player.stop()
         player.release()
     }
+
 }
+*/

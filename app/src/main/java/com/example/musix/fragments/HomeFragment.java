@@ -78,12 +78,7 @@ public class HomeFragment extends Fragment {
 
 
         uploadSong = view.findViewById(R.id.uploadSong);
-        uploadSong.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                uploadSong();
-            }
-        });
+        uploadSong.setOnClickListener(v -> uploadSong());
 
         account = GoogleSignIn.getLastSignedInAccount(getContext());
         gso = GoogleSignInHelper.getSignInOptions(getContext());

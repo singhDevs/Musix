@@ -73,7 +73,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginVertical="3dp">
 
-                    <androidx.core.widget.NestedScrollView
+                    <ScrollView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:maxHeight="50dp"
@@ -90,7 +90,7 @@
                             android:text="Name"
                             android:textColor="@color/white"
                             android:textSize="20sp"/>
-                    </androidx.core.widget.NestedScrollView>
+                    </ScrollView>
 
                     <androidx.constraintlayout.widget.Guideline
                         android:id="@+id/guideline16"

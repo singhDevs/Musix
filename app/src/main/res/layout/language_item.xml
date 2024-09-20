@@ -24,7 +24,6 @@
         android:id="@+id/banner"
         android:layout_width="40dp"
         android:layout_height="40dp"
-        android:src="@drawable/punj"
         app:riv_corner_radius="20dp"
         app:riv_oval="true"
         android:scaleType="centerCrop"
