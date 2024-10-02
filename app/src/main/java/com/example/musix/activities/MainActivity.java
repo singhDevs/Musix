@@ -1,6 +1,5 @@
 package com.example.musix.activities;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.cardview.widget.CardView;
 import androidx.constraintlayout.widget.ConstraintLayout;
@@ -20,29 +19,27 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
-import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
-import com.example.musix.Constants;
+import com.example.musix.MediaPlayback;
 import com.example.musix.R;
 import com.example.musix.application.RunningApp;
 import com.example.musix.databinding.ActivityMainBinding;
 import com.example.musix.fragments.HomeFragment;
 import com.example.musix.fragments.FilesFragment;
+//import com.example.musix.fragments.SearchComposeFragment;
+//import com.example.musix.fragments.SearchFragment;
 import com.example.musix.fragments.SearchFragment;
 import com.example.musix.handlers.FirebaseHandler;
 import com.example.musix.models.Playlist;
 import com.example.musix.models.Song;
 import com.example.musix.services.MusicService;
 import com.example.musix.settings.MusicPlayerSettings;
-import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.button.MaterialButton;
 import com.google.firebase.auth.FirebaseAuth;
 import com.ismaeldivita.chipnavigation.ChipNavigationBar;
@@ -128,8 +125,8 @@ public class MainActivity extends AppCompatActivity {
         songTxtArtist.setSelected(true);
 
         Log.d("songBar", "2.songBar visi: " + songBar.getVisibility());
-        if (musicService != null && Constants.INSTANCE.getMusicStatus() != MusicService.NOT_STARTED) {
-            Log.d("songBar", "2.music Status: " + Constants.INSTANCE.getMusicStatus());
+        if (musicService != null && MediaPlayback.INSTANCE.getMusicStatus() != MusicService.NOT_STARTED) {
+            Log.d("songBar", "2.music Status: " + MediaPlayback.INSTANCE.getMusicStatus());
             setUpSongBar();
         }
 
@@ -163,8 +160,8 @@ public class MainActivity extends AppCompatActivity {
         playBtn.setOnClickListener(v -> {
             Log.d("TAG", "playButton clicked!");
             if(musicService!= null) {
-                if (Constants.INSTANCE.getMusicStatus() == MusicService.PLAYING_MUSIC) {
-                    Constants.INSTANCE.setMusicStatus(MusicService.PAUSED_MUSIC);
+                if (MediaPlayback.INSTANCE.getMusicStatus() == MusicService.PLAYING_MUSIC) {
+                    MediaPlayback.INSTANCE.setMusicStatus(MusicService.PAUSED_MUSIC);
                     Log.d("TAG", "Found PLAYING, setting PAUSED state...");
                     int play = MusicService.PAUSED_MUSIC;
                     int shuffle = musicPlayerSettings.getShuffleSetting();
@@ -173,7 +170,7 @@ public class MainActivity extends AppCompatActivity {
 //                    musicService.pauseMusic();
                     playBtn.setImageResource(R.drawable.ic_play_arrow);
                 } else {
-                    Constants.INSTANCE.setMusicStatus(MusicService.PLAYING_MUSIC);
+                    MediaPlayback.INSTANCE.setMusicStatus(MusicService.PLAYING_MUSIC);
                     Log.d("TAG", "Found PAUSED, setting PLAY state...");
                     int play = MusicService.PLAYING_MUSIC;
                     int shuffle = musicPlayerSettings.getShuffleSetting();
@@ -254,7 +251,7 @@ public class MainActivity extends AppCompatActivity {
                 .load(songBanner)
                 .into(songImgBanner);
 
-        if (musicService != null && Constants.INSTANCE.getMusicStatus() == MusicService.PLAYING_MUSIC)
+        if (musicService != null && MediaPlayback.INSTANCE.getMusicStatus() == MusicService.PLAYING_MUSIC)
             playBtn.setImageResource(R.drawable.ic_pause);
         else
             playBtn.setImageResource(R.drawable.ic_play_arrow);
@@ -319,8 +316,8 @@ public class MainActivity extends AppCompatActivity {
             getMusicService();
 
             if(musicService != null){
-                if (Constants.INSTANCE.getMusicStatus() == MusicService.PLAYING_MUSIC) {
-                    Constants.INSTANCE.setMusicStatus(MusicService.PAUSED_MUSIC);
+                if (MediaPlayback.INSTANCE.getMusicStatus() == MusicService.PLAYING_MUSIC) {
+                    MediaPlayback.INSTANCE.setMusicStatus(MusicService.PAUSED_MUSIC);
                     Log.d("TAG", "Found PLAYING, setting PAUSED state...");
                     int play = MusicService.PAUSED_MUSIC;
                     int shuffle = musicPlayerSettings.getShuffleSetting();
@@ -330,7 +327,7 @@ public class MainActivity extends AppCompatActivity {
                     playBtn.setImageResource(R.drawable.ic_play_arrow);
                 }
                 else {
-                    Constants.INSTANCE.setMusicStatus(MusicService.PLAYING_MUSIC);
+                    MediaPlayback.INSTANCE.setMusicStatus(MusicService.PLAYING_MUSIC);
                     Log.d("TAG", "Found PAUSED, setting PLAY state...");
                     int play = MusicService.PLAYING_MUSIC;
                     int shuffle = musicPlayerSettings.getShuffleSetting();

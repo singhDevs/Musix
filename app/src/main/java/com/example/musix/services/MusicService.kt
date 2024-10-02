@@ -4,9 +4,7 @@ import android.app.NotificationManager
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
-import android.os.Binder
 import android.os.Bundle
-import android.os.IBinder
 import android.util.Log
 import androidx.annotation.OptIn
 import androidx.core.content.ContextCompat
@@ -15,8 +13,6 @@ import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.common.Player
 import androidx.media3.common.MediaItem
 import androidx.media3.session.MediaSession
-import androidx.localbroadcastmanager.content.LocalBroadcastManager
-import androidx.media3.common.ForwardingPlayer
 import androidx.media3.common.MediaMetadata
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.CommandButton
@@ -28,18 +24,18 @@ import androidx.media3.session.SessionCommand
 import androidx.media3.session.SessionCommands
 import androidx.media3.session.SessionResult
 import androidx.media3.session.SessionToken
-import com.example.musix.Constants
+import androidx.media3.ui.PlayerNotificationManager
+import com.example.musix.MediaPlayback
+import com.example.musix.MediaPlayback.mediaSession
+import com.example.musix.MediaPlayback.player
 //import com.example.musix.notification.MusicPlayerNotificationService
 import com.example.musix.R
-import com.example.musix.application.RunningApp
 //import com.example.musix.activities.NewMusicPlayer.mediaController
-import com.example.musix.handlers.FirebaseHandler
 import com.example.musix.models.Song
 import com.google.common.collect.ImmutableList
 import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
 import com.google.firebase.auth.FirebaseAuth
-import java.io.Serializable
 
 private const val TAG = "Musix"
 
@@ -60,7 +56,7 @@ class MusicService: MediaSessionService()
         const val PLAY_NEXT = "play_next"
         const val PLAY_PREV = "play_prev"
 
-        val song = Song("", "", "", "", "", 0, "", 0, "")
+        val song = Song("", "", "", "", "", 0, "", 0, "", "")
         const val SONG_CHANGED = "com.example.musix.models.Song"
         const val PLAYER_PLAYING = "player_ready"
         fun mediaItemBuilder(song: Song){
@@ -76,7 +72,7 @@ class MusicService: MediaSessionService()
                         .setDurationMs(song.durationInSeconds*1000L)
                         .build()
                 ).build()
-            Constants.mediaController?.setMediaItem(mediaItem)
+            MediaPlayback.mediaController?.setMediaItem(mediaItem)
         }
     }
 
@@ -87,8 +83,6 @@ class MusicService: MediaSessionService()
     private var playlistName: String = "Default"
     private lateinit var songList: List<Song?>
     private var songPosition: Int = 0
-    private lateinit var player: ExoPlayer
-    private var mediaSession: MediaSession? = null
     private lateinit var controllerFuture : ListenableFuture<MediaController>
     private var songURL: String = ""
     private lateinit var notificationManager: NotificationManager
@@ -123,7 +117,6 @@ class MusicService: MediaSessionService()
     @OptIn(UnstableApi::class) override fun onCreate() {
         super.onCreate()
 
-
 //        val forwardingPlayer = object : ForwardingPlayer(player) {
 //            override fun seekToNext() {
 //                super.seekToNext()
@@ -135,7 +128,7 @@ class MusicService: MediaSessionService()
 //        }
 
         player = ExoPlayer.Builder(this).build()
-        mediaSession = MediaSession.Builder(this, player)
+        mediaSession = MediaSession.Builder(this, player!!)
             .setCallback(MediaCallback())
             .setCustomLayout(ImmutableList.of(playPrev, playNext))
             .build()
@@ -145,8 +138,8 @@ class MusicService: MediaSessionService()
         controllerFuture =
             MediaController.Builder(context, sessionToken).buildAsync()
         controllerFuture.addListener({
-            Constants.mediaController = controllerFuture.get()
-            Constants.mediaControllerCallback?.onMediaControllerAvailable()
+            MediaPlayback.mediaController = controllerFuture.get()
+            MediaPlayback.mediaControllerCallback?.onMediaControllerAvailable()
         }, ContextCompat.getMainExecutor(this))
 
 //        songList = listOf(song)

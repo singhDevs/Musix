@@ -289,7 +289,7 @@ public class HomeFragment extends Fragment {
     }
 
     public void uploadSong() {
-        Song song = new Song("", "", "", "In the End", "Linkin Park", 216, "Hybrid Theory", 2000, "english");
+        Song song = new Song("", "", "", "In the End", "Linkin Park", 216, "Hybrid Theory", 2000, "english", "");
         int uri = getContext().getResources().getIdentifier("linkinpark", "raw", getContext().getPackageName());
         int bannerUri = getContext().getResources().getIdentifier("linkinpark_bg", "raw", getContext().getPackageName());
 

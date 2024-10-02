@@ -3,6 +3,8 @@ package com.example.musix.activities;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Color;
+import android.graphics.drawable.GradientDrawable;
 import android.media.AudioManager;
 import android.os.Bundle;
 import android.os.Handler;
@@ -18,10 +20,11 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.media3.common.Player;
 import androidx.media3.session.MediaController;
 
 import com.bumptech.glide.Glide;
-import com.example.musix.Constants;
+import com.example.musix.MediaPlayback;
 import com.example.musix.callbacks.MediaControllerCallback;
 //import com.example.musix.notification.MusicPlayerNotificationService;
 import com.example.musix.R;
@@ -87,7 +90,7 @@ public class NewMusicPlayer extends AppCompatActivity implements MediaController
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Constants.INSTANCE.setMediaControllerCallback(this);
+        MediaPlayback.INSTANCE.setMediaControllerCallback(this);
 
         requestWindowFeature( Window.FEATURE_NO_TITLE );
         getWindow().setFlags( WindowManager.LayoutParams.FLAG_FULLSCREEN,
@@ -101,7 +104,7 @@ public class NewMusicPlayer extends AppCompatActivity implements MediaController
 
         fetchIntentData();
 
-        if(Constants.INSTANCE.getMediaController() != null && isFetchingDone){
+        if(MediaPlayback.INSTANCE.getMediaController() != null && isFetchingDone){
             onMediaControllerAvailable();
         }
 
@@ -197,31 +200,31 @@ public class NewMusicPlayer extends AppCompatActivity implements MediaController
         shuffleBtn.setOnClickListener(view -> {
             if (shuffleStatus == NO_SHUFFLE) {
                 shuffleStatus = SHUFFLE;
-                Constants.INSTANCE.setShuffleStatus(MusicService.SHUFFLE);
+                MediaPlayback.INSTANCE.setShuffleStatus(MusicService.SHUFFLE);
                 shuffleBtn.setImageResource(R.drawable.shuffle);
             } else {
                 shuffleStatus = NO_SHUFFLE;
-                Constants.INSTANCE.setShuffleStatus(MusicService.NO_SHUFFLE);
+                MediaPlayback.INSTANCE.setShuffleStatus(MusicService.NO_SHUFFLE);
                 shuffleBtn.setImageResource(R.drawable.no_shuffle);
             }
-            musicPlayerSettings.saveSettings(Constants.INSTANCE.getMusicStatus(), shuffleStatus, repeatState);
+            musicPlayerSettings.saveSettings(MediaPlayback.INSTANCE.getMusicStatus(), shuffleStatus, repeatState);
         });
 
         repeatBtn.setOnClickListener(view -> {
             if (repeatState == NOT_REPEATED) {
                 repeatBtn.setImageResource(R.drawable.repeat);
                 repeatState = REPEAT;
-                Constants.INSTANCE.setRepeatStatus(MusicService.REPEAT);
+                MediaPlayback.INSTANCE.setRepeatStatus(MusicService.REPEAT);
             } else if (repeatState == REPEAT) {
                 repeatBtn.setImageResource(R.drawable.repeat_one);
                 repeatState = REPEAT_ONE;
-                Constants.INSTANCE.setRepeatStatus(MusicService.REPEAT_ONE);
+                MediaPlayback.INSTANCE.setRepeatStatus(MusicService.REPEAT_ONE);
             } else {
                 repeatBtn.setImageResource(R.drawable.no_repeat);
                 repeatState = NOT_REPEATED;
-                Constants.INSTANCE.setRepeatStatus(MusicService.NOT_REPEATED);
+                MediaPlayback.INSTANCE.setRepeatStatus(MusicService.NOT_REPEATED);
             }
-            musicPlayerSettings.saveSettings(Constants.INSTANCE.getMusicStatus(), shuffleStatus, repeatState);
+            musicPlayerSettings.saveSettings(MediaPlayback.INSTANCE.getMusicStatus(), shuffleStatus, repeatState);
         });
 
         moreBtn.setOnClickListener(view -> {
@@ -315,6 +318,7 @@ public class NewMusicPlayer extends AppCompatActivity implements MediaController
         }
         updateSeekBar();
         setUpUI(songList.get(songPosition));
+        playMusic();
     }
 
     private void updateSongPositionPrev() {
@@ -330,7 +334,7 @@ public class NewMusicPlayer extends AppCompatActivity implements MediaController
     }
 
     private void updateSongPositionNext() {
-        if (Constants.INSTANCE.getRepeatStatus() == REPEAT) {
+        if (MediaPlayback.INSTANCE.getRepeatStatus() == REPEAT) {
             if (shuffleStatus == SHUFFLE) {
                 int randomPosition = songPosition;
                 while (songPosition == randomPosition) {
@@ -344,7 +348,7 @@ public class NewMusicPlayer extends AppCompatActivity implements MediaController
                     songPosition = 0;
                 }
             }
-        } else if (Constants.INSTANCE.getRepeatStatus() == REPEAT_ONE) {
+        } else if (MediaPlayback.INSTANCE.getRepeatStatus() == REPEAT_ONE) {
             mediaController.seekTo(0);
         } else {
             if (shuffleStatus == SHUFFLE) {
@@ -486,7 +490,19 @@ public class NewMusicPlayer extends AppCompatActivity implements MediaController
     @Override
     public void onMediaControllerAvailable() {
         Log.d("TAG", "Media Controller Available, calling setups()");
-        mediaController = Constants.INSTANCE.getMediaController();
+        mediaController = MediaPlayback.INSTANCE.getMediaController();
+        MediaPlayback.INSTANCE.getMediaController().addListener(new Player.Listener() {
+            @Override
+            public void onPlaybackStateChanged(int playbackState) {
+                Player.Listener.super.onPlaybackStateChanged(playbackState);
+                if(playbackState == Player.STATE_ENDED){
+                    updateSongPositionNext();
+                    MusicService.Companion.mediaItemBuilder(songList.get(songPosition));
+                    setUpUI(songList.get(songPosition));
+                    playMusic();
+                }
+            }
+        });
         findViewById(R.id.progressCardView).setVisibility(View.GONE);
         findViewById(R.id.constLayt).setVisibility(View.VISIBLE);
         setups();
@@ -510,7 +526,7 @@ public class NewMusicPlayer extends AppCompatActivity implements MediaController
         Log.d("TAG", "Playing Music");
         playBtn.setImageResource(R.drawable.ic_pause_filled);
         musicStatus = PLAYING_MUSIC;
-        Constants.INSTANCE.setMusicStatus(MusicService.PLAYING_MUSIC);
+        MediaPlayback.INSTANCE.setMusicStatus(MusicService.PLAYING_MUSIC);
         mediaController.play();
         Log.d("TAG", "Saving PLAY state...");
         int play = MusicService.PLAYING_MUSIC;
@@ -528,7 +544,7 @@ public class NewMusicPlayer extends AppCompatActivity implements MediaController
         Log.d("TAG", "Music Paused");
         playBtn.setImageResource(R.drawable.ic_play_filled);
         musicStatus = PAUSED_MUSIC;
-        Constants.INSTANCE.setMusicStatus(MusicService.PAUSED_MUSIC);
+        MediaPlayback.INSTANCE.setMusicStatus(MusicService.PAUSED_MUSIC);
         mediaController.pause();
         Log.d("TAG", "Saving PAUSE state...");
         int play = MusicService.PAUSED_MUSIC;
@@ -573,6 +589,8 @@ public class NewMusicPlayer extends AppCompatActivity implements MediaController
         Glide.with(this)
                 .load(song.getBanner())
                 .into(bottomBanner);
+
+        showAmbient(song);
     }
 
     private void setBanner(String bannerUrl, RoundedImageView roundedImageView) {
@@ -581,5 +599,26 @@ public class NewMusicPlayer extends AppCompatActivity implements MediaController
                 .load(bannerUrl)
                 .centerCrop()
                 .into(roundedImageView);
+    }
+
+    private void showAmbient(Song song){
+        new Handler(Looper.getMainLooper()).postDelayed(() -> {
+            GradientDrawable gradientDrawable = new GradientDrawable(
+                    GradientDrawable.Orientation.TL_BR,
+                    new int[]{
+                            Color.parseColor(song.getStartColor()),
+                            Color.TRANSPARENT
+                    }
+            );
+            gradientDrawable.setGradientType(GradientDrawable.RADIAL_GRADIENT);
+            gradientDrawable.setGradientCenter(0.5f, 0.48f);
+            gradientDrawable.setGradientRadius(325 * getResources().getDisplayMetrics().density);
+
+            View ambientView = findViewById(R.id.ambientView);
+            ambientView.setBackground(gradientDrawable);
+            ambientView.animate()
+                    .alpha(1f)
+                    .setDuration(500);
+        }, 1000);
     }
 }

@@ -42,10 +42,19 @@
         android:layout_height="match_parent"
         android:gravity="center_horizontal"
         android:orientation="vertical"
-        android:paddingTop="12dp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        android:visibility="gone">
+        android:visibility="visible">
+        
+        <View
+            android:id="@+id/ambientView"
+            android:layout_width="500dp"
+            android:layout_height="600dp"
+            app:layout_constraintStart_toStartOf="@id/linearLyt2"
+            app:layout_constraintEnd_toEndOf="@id/linearLyt2"
+            app:layout_constraintTop_toTopOf="@id/constLayt"
+            android:background="@drawable/ambient_gradient"
+            android:alpha="0"/>
 
         <LinearLayout
             android:id="@+id/linearLyt1"
@@ -292,7 +301,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            app:layout_constraintGuide_percent="0.07" />
+            app:layout_constraintGuide_percent="0.09" />
 
         <androidx.constraintlayout.widget.Guideline
             android:id="@+id/guideline2"

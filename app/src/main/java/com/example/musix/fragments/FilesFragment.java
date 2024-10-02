@@ -145,7 +145,7 @@ public class FilesFragment extends Fragment{
             if(title == null){
                 title = "Unknown Audio";
             }
-            return new Song(id, key, banner, title, artist, duration, album, year, "");
+            return new Song(id, key, banner, title, artist, duration, album, year, "", "");
         }
 
         @Override

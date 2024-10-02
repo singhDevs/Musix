@@ -4,7 +4,7 @@
 
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
-    <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />      <!-- changed to READ_MEDIA_AUDIO to support Android 13+ -->
+    <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" /> <!-- changed to READ_MEDIA_AUDIO to support Android 13+ -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
     <uses-permission android:name="android.permission.INTERNET" />
@@ -20,6 +20,9 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Musix"
         tools:targetApi="31">
+        <activity
+            android:name=".activities.OnboardingActivity"
+            android:exported="false" />
         <activity
             android:name=".activities.RegisterActivity"
             android:exported="false" />
@@ -60,14 +63,13 @@
 
         <service
             android:name=".services.MusicService"
-            android:foregroundServiceType="mediaPlayback"
-            android:exported="true">
+            android:exported="true"
+            android:foregroundServiceType="mediaPlayback">
             <intent-filter>
-                <action android:name="androidx.media3.session.MediaSessionService"/>
-                <action android:name="android.media.browse.MediaBrowserService"/>
+                <action android:name="androidx.media3.session.MediaSessionService" />
+                <action android:name="android.media.browse.MediaBrowserService" />
             </intent-filter>
         </service>
-
     </application>
 
 </manifest>

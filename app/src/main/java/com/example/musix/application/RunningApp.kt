@@ -48,11 +48,14 @@ class RunningApp: Application() {
     }
 
     private fun initDatabase() {
-        database = Room.databaseBuilder(
-            applicationContext,
-            LikedSongsDatabase::class.java,
-            "my_database"
-        ).build()
+        database = Room
+            .databaseBuilder(
+                applicationContext,
+                LikedSongsDatabase::class.java,
+                "my_database"
+            )
+            .fallbackToDestructiveMigration()
+            .build()
         likedSongsRepository = LikedSongsRepository(database)
         database.songDao().deleteAllLikedSongs()
     }
