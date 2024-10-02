@@ -5,4 +5,5 @@
     <color name="bg_primary">#0B0F20</color>
     <color name="grey">#BCBCBC</color>
     <color name="selection">#2B3673</color>
+    <color name="notification_color">#b2e5ed</color>
 </resources>

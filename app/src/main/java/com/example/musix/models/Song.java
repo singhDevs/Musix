@@ -21,8 +21,9 @@ public class Song implements Parcelable, Serializable {
     private String album;
     private int releaseYear;
     private String language;
+    private String startColor;
 
-    public Song(String id, String key, String banner, String title, String artist, int durationInSeconds, String album, int releaseYear, String language) {
+    public Song(String id, String key, String banner, String title, String artist, int durationInSeconds, String album, int releaseYear, String language, String startColor) {
         this.id = id;
         this.key = key;
         this.Banner = banner;
@@ -32,15 +33,17 @@ public class Song implements Parcelable, Serializable {
         this.album = album;
         this.releaseYear = releaseYear;
         this.language = language;
+        this.startColor = startColor;
     }
 
-    public Song(String id, String key, String banner, String title, String artist, String language) {
+    public Song(String id, String key, String banner, String title, String artist, String language, String startColor) {
         this.id = id;
         this.key = key;
         this.Banner = banner;
         this.title = title;
         this.artist = artist;
         this.language = language;
+        this.startColor = startColor;
     }
 
     // Parcelable constructor
@@ -54,6 +57,7 @@ public class Song implements Parcelable, Serializable {
         album = in.readString();
         releaseYear = in.readInt();
         language = in.readString();
+        startColor = in.readString();
     }
 
     public static final Creator<Song> CREATOR = new Creator<Song>() {
@@ -82,6 +86,7 @@ public class Song implements Parcelable, Serializable {
         dest.writeString(album);
         dest.writeInt(releaseYear);
         dest.writeString(language);
+        dest.writeString(startColor);
     }
 
     @Override
@@ -139,6 +144,14 @@ public class Song implements Parcelable, Serializable {
 
     public void setLanguage(String language) {
         this.language = language;
+    }
+
+    public String getStartColor() {
+        return startColor;
+    }
+
+    public void setStartColor(String startColor) {
+        this.startColor = startColor;
     }
 
     public void setDurationInSeconds(int durationInSeconds) {

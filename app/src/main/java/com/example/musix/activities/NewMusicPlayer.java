@@ -1,33 +1,32 @@
 package com.example.musix.activities;
 
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.localbroadcastmanager.content.LocalBroadcastManager;
-
 import android.annotation.SuppressLint;
-import android.app.NotificationManager;
-import android.content.BroadcastReceiver;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
-import android.content.ServiceConnection;
+import android.graphics.Color;
+import android.graphics.drawable.GradientDrawable;
 import android.media.AudioManager;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.IBinder;
 import android.os.Looper;
 import android.os.Parcelable;
 import android.util.Log;
 import android.view.View;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
-import android.widget.Toast;
+
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.media3.common.Player;
+import androidx.media3.session.MediaController;
 
 import com.bumptech.glide.Glide;
-import com.example.musix.Notification.MusicPlayerNotificationService;
+import com.example.musix.MediaPlayback;
+import com.example.musix.callbacks.MediaControllerCallback;
+//import com.example.musix.notification.MusicPlayerNotificationService;
 import com.example.musix.R;
 import com.example.musix.application.RunningApp;
 import com.example.musix.handlers.FirebaseHandler;
@@ -39,21 +38,16 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.firebase.auth.FirebaseAuth;
 import com.makeramen.roundedimageview.RoundedImageView;
 
-import org.jetbrains.annotations.Contract;
-
-import java.io.Serializable;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 
-import kotlin.internal.LowPriorityInOverloadResolution;
-
-public class NewMusicPlayer extends AppCompatActivity {
-    private NotificationManager notificationManager;
-    private MusicPlayerNotificationService notificationService;
+public class NewMusicPlayer extends AppCompatActivity implements MediaControllerCallback {
+//    private MusicPlayerNotificationService musicPlayerNotificationService;
     private AudioManager audioManager;
     private Song song;
-    private List<Song> songList;
-    private int songPosition;
+    private List<Song> songList = Collections.emptyList();
+    private int songPosition = 0;
     private RoundedImageView songBanner;
     TextView songTitle, songArtist, currDuration, songDuration, playlistName, bottomTitle, bottomArtist;
     ImageView playBtn, nextBtn, prevBtn, backBtn, likeBtn, repeatBtn, volumeIcon, shuffleBtn, moreBtn, bottomBanner;
@@ -73,15 +67,17 @@ public class NewMusicPlayer extends AppCompatActivity {
     public int musicStatus;
     private int shuffleStatus;
     private String uid = "";
-    private String playlistTitle, songURL;
+    private String playlistTitle = "", songURL = "";
     private RunningApp runningApp;
-    private MusicService musicService;
-    private ServiceConnection serviceConnection;
     private MusicPlayerSettings musicPlayerSettings;
+    public static MediaController mediaController = null;
+    private Boolean isFetchingDone = false;
+
+    /**
     private final BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            Log.d("broadcast", "Song Changed Broadcast received");
+            Log.d("TAG", "Song Changed Broadcast received");
             if (intent.getAction() != null && intent.getAction().equals(MusicService.SONG_CHANGED)) {
                 songPosition = intent.getIntExtra("songPosition", 0);
                 Log.d("TAG", "song Position: " + songPosition);
@@ -89,53 +85,91 @@ public class NewMusicPlayer extends AppCompatActivity {
             }
         }
     };
-
-    @Override
-    protected void onStart() {
-        super.onStart();
-        setUpUI(songList.get(songPosition));
-    }
+     */
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        MediaPlayback.INSTANCE.setMediaControllerCallback(this);
+
+        requestWindowFeature( Window.FEATURE_NO_TITLE );
+        getWindow().setFlags( WindowManager.LayoutParams.FLAG_FULLSCREEN,
+                WindowManager.LayoutParams.FLAG_FULLSCREEN );
+
         setContentView(R.layout.activity_new_music_player);
 
         runningApp = (RunningApp) getApplication();
-        if (runningApp != null) {
-            Log.d("TAG", "initializing music service in Music Player & Service Connection");
-            musicService = runningApp.getMusicService();
-            serviceConnection = runningApp.getServiceConnection();
-        } else {
-            Log.d("TAG", "Running App is NULL");
+
+        findViewById(R.id.progressCardView).setVisibility(View.VISIBLE);
+
+        fetchIntentData();
+
+        if(MediaPlayback.INSTANCE.getMediaController() != null && isFetchingDone){
+            onMediaControllerAvailable();
         }
 
+        /*
+        if(mediaController != null) setups();
+        else{
+            if (runningApp != null) {
+                Log.d("TAG", "initializing music service in Music Player & Service Connection");
+                musicService = runningApp.getMusicService();
+                assert musicService != null;
+                serviceConnection = runningApp.getServiceConnection();
+                controllerFuture.addListener(() ->
+                        {
+                            try {
+                                mediaController = controllerFuture.get();
+                                Log.d("TAG", "got the mediaController!");
+                                if(mediaController == null) Log.d("TAG", "mediaController is null!");
+                                setups();
+                            } catch (ExecutionException | InterruptedException e) {
+                                throw new RuntimeException(e);
+                            }
+                        },
+                        ContextCompat.getMainExecutor(musicService)
+                );
+            }
+            else Log.d("TAG", "Running App is NULL");
+        }
+        **/
+    }
+
+    private void setups() {
         musicPlayerSettings = new MusicPlayerSettings(getApplicationContext());
-        IntentFilter filter = new IntentFilter(MusicService.SONG_CHANGED);
-        LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver, filter);
 
         Log.d("TAG", "calling 3 functions...");
-        fetchIntentData();
+        /*
+         * IntentFilter filter = new IntentFilter(MusicService.SONG_CHANGED);
+         * LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver, filter);
+         * fetchIntentData();
+         * setUpMusicService();
+        */
         initializeUI();
-        setUpMusicService();
 
         backBtn.setOnClickListener(view -> {
             onBackPressed();
         });
 
         playBtn.setOnClickListener(view -> {
-            if (musicStatus == PAUSED_MUSIC) {
+            if (mediaController.isPlaying()) {
+                pauseMusic();
+            } else{
                 playMusic();
-            } else if (musicStatus == PLAYING_MUSIC) pauseMusic();
+            }
         });
 
         nextBtn.setOnClickListener(view -> {
-            musicService.playNext();
-            musicService.notifySongChanged();
+            updateSongPositionNext();
+            MusicService.Companion.mediaItemBuilder(songList.get(songPosition));
+            setUpUI(songList.get(songPosition));
+            playMusic();
+//            musicService.notifySongChanged();
         });
         prevBtn.setOnClickListener(view -> {
-            musicService.playPrev();
-            musicService.notifySongChanged();
+            updateSongPositionPrev();
+            MusicService.Companion.mediaItemBuilder(songList.get(songPosition));
+            playMusic();
         });
 
         likeBtn.setOnClickListener(view -> {
@@ -154,34 +188,43 @@ public class NewMusicPlayer extends AppCompatActivity {
             }
         });
 
+        songArtist.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent1 = new Intent(getApplicationContext(), ArtistActivity.class);
+                intent1.putExtra("artist_name", songList.get(songPosition).getArtist());
+                startActivity(intent1);
+            }
+        });
+
         shuffleBtn.setOnClickListener(view -> {
             if (shuffleStatus == NO_SHUFFLE) {
                 shuffleStatus = SHUFFLE;
-                musicService.setShuffleStatus(MusicService.SHUFFLE);
+                MediaPlayback.INSTANCE.setShuffleStatus(MusicService.SHUFFLE);
                 shuffleBtn.setImageResource(R.drawable.shuffle);
             } else {
                 shuffleStatus = NO_SHUFFLE;
-                musicService.setShuffleStatus(MusicService.NO_SHUFFLE);
+                MediaPlayback.INSTANCE.setShuffleStatus(MusicService.NO_SHUFFLE);
                 shuffleBtn.setImageResource(R.drawable.no_shuffle);
             }
-            musicPlayerSettings.saveSettings(shuffleStatus, repeatState);
+            musicPlayerSettings.saveSettings(MediaPlayback.INSTANCE.getMusicStatus(), shuffleStatus, repeatState);
         });
 
         repeatBtn.setOnClickListener(view -> {
             if (repeatState == NOT_REPEATED) {
                 repeatBtn.setImageResource(R.drawable.repeat);
                 repeatState = REPEAT;
-                musicService.setRepeatStatus(MusicService.REPEAT);
+                MediaPlayback.INSTANCE.setRepeatStatus(MusicService.REPEAT);
             } else if (repeatState == REPEAT) {
                 repeatBtn.setImageResource(R.drawable.repeat_one);
                 repeatState = REPEAT_ONE;
-                musicService.setRepeatStatus(MusicService.REPEAT_ONE);
+                MediaPlayback.INSTANCE.setRepeatStatus(MusicService.REPEAT_ONE);
             } else {
                 repeatBtn.setImageResource(R.drawable.no_repeat);
                 repeatState = NOT_REPEATED;
-                musicService.setRepeatStatus(MusicService.NOT_REPEATED);
+                MediaPlayback.INSTANCE.setRepeatStatus(MusicService.NOT_REPEATED);
             }
-            musicPlayerSettings.saveSettings(shuffleStatus, repeatState);
+            musicPlayerSettings.saveSettings(MediaPlayback.INSTANCE.getMusicStatus(), shuffleStatus, repeatState);
         });
 
         moreBtn.setOnClickListener(view -> {
@@ -195,11 +238,18 @@ public class NewMusicPlayer extends AppCompatActivity {
                 new Handler(Looper.getMainLooper()).postDelayed(() -> layoutMore.setVisibility(View.GONE), 150);
             }
         });
+
+
         LinearLayout addToPlaylist = findViewById(R.id.addToPlaylist);
         addToPlaylist.setOnClickListener(view -> {
             Intent intent1 = new Intent(this, AddToPlaylist.class);
             intent1.putExtra("song", (Parcelable) songList.get(songPosition));
-            if (song == null) Log.d("TAG", "Lol DEWD");
+            startActivity(intent1);
+        });
+        LinearLayout aboutArtist = findViewById(R.id.aboutArtist);
+        aboutArtist.setOnClickListener(view -> {
+            Intent intent1 = new Intent(this, ArtistActivity.class);
+            intent1.putExtra("artist_name", songList.get(songPosition).getArtist());
             startActivity(intent1);
         });
 
@@ -207,19 +257,16 @@ public class NewMusicPlayer extends AppCompatActivity {
             @Override
             public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
                 if (b) {
-//                    player.seekTo(i* 1000L);
-                    musicService.playerSeekTo(i * 1000L);
+                    mediaController.seekTo(i * 1000L);
                     currDuration.setText(formatTime(i));
                 }
             }
 
             @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-            }
+            public void onStartTrackingTouch(SeekBar seekBar) {}
 
             @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-            }
+            public void onStopTrackingTouch(SeekBar seekBar) {}
         });
 
         //managing Volume
@@ -255,6 +302,7 @@ public class NewMusicPlayer extends AppCompatActivity {
                             progress,
                             AudioManager.FLAG_PLAY_SOUND
                     );
+                    mediaController.setDeviceVolume(progress, maxVolume);
                 }
 
                 @Override
@@ -269,37 +317,99 @@ public class NewMusicPlayer extends AppCompatActivity {
             });
         }
         updateSeekBar();
+        setUpUI(songList.get(songPosition));
+        playMusic();
+    }
+
+    private void updateSongPositionPrev() {
+        if (mediaController.getCurrentPosition() / 1000 <= 2) {
+            if (songPosition == 0) {
+                mediaController.seekTo(0);
+            } else {
+                songPosition--;
+            }
+        } else {
+            mediaController.seekTo(0);
+        }
+    }
+
+    private void updateSongPositionNext() {
+        if (MediaPlayback.INSTANCE.getRepeatStatus() == REPEAT) {
+            if (shuffleStatus == SHUFFLE) {
+                int randomPosition = songPosition;
+                while (songPosition == randomPosition) {
+                    randomPosition = (int) (Math.random() * songList.size() + 0);
+                }
+                songPosition = randomPosition;
+            } else {
+                if (songPosition < songList.size() - 1) {
+                    songPosition++;
+                } else {
+                    songPosition = 0;
+                }
+            }
+        } else if (MediaPlayback.INSTANCE.getRepeatStatus() == REPEAT_ONE) {
+            mediaController.seekTo(0);
+        } else {
+            if (shuffleStatus == SHUFFLE) {
+                int randomPosition = songPosition;
+                while (songPosition == randomPosition) {
+                    randomPosition = (int) (Math.random() * songList.size() + 0);
+                }
+                songPosition = randomPosition;
+            } else {
+                if (songPosition < songList.size() - 1)
+                    songPosition++;
+            }
+        }
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        /**
         unbindService(serviceConnection);
         if (broadcastReceiver != null) {
             LocalBroadcastManager.getInstance(this).unregisterReceiver(broadcastReceiver);
         }
+        */
     }
 
+    /**
     private void setUpMusicService() {
         Log.d("TAG", "setting up Music Service");
         Intent serviceIntent = new Intent(this, MusicService.class);
         musicService.fetchData(songList, songPosition, playlistTitle);
         bindService(serviceIntent, serviceConnection, Context.BIND_AUTO_CREATE);
     }
+    */
 
     private void fetchIntentData() {
         Log.d("TAG", "inside fetch Intent Data");
         Intent intent = getIntent();
-        songList = (List<Song>) intent.getSerializableExtra("songList");
-        songPosition = intent.getIntExtra("songPosition", 0);
-        uid = intent.getStringExtra("currentUser");
-        playlistTitle = intent.getStringExtra("playlistName");
-        songURL = intent.getStringExtra("songUrl");
-        Log.d("TAG", "in NEW PLAYER song URL: " + songURL);
+
+//        if (intent != null && intent.hasExtra("notificationSongList")) {
+//            String msg = intent.getStringExtra("notificationSongList");
+//
+//        }
+//        else{
+            songList = (List<Song>) intent.getSerializableExtra("songList");
+            songPosition = intent.getIntExtra("songPosition", 0);
+            uid = intent.getStringExtra("currentUser");
+            playlistTitle = intent.getStringExtra("playlistName");
+            songURL = intent.getStringExtra("songUrl");
+            Log.d("TAG", "in NEW PLAYER song URL: " + songURL);
+            Log.d("TAG", "songPosition: " + songPosition);
+
+            MusicService.Companion.mediaItemBuilder(songList.get(songPosition));
+            isFetchingDone = true;
+//        }
     }
 
     private void initializeUI() {
         Log.d("TAG", "inside initialize UI");
+
+//        musicPlayerNotificationService = new MusicPlayerNotificationService(getApplicationContext(), songList.get(songPosition), R.drawable.ic_pause);
         playlistName = findViewById(R.id.playlistName);
         songTitle = findViewById(R.id.songTitle);
         songArtist = findViewById(R.id.songArtist);
@@ -313,13 +423,15 @@ public class NewMusicPlayer extends AppCompatActivity {
         repeatState = musicPlayerSettings.getRepeatSetting();
 
         //Setting Like State
-        new SetLikeState().execute();
+//        new SetLikeState().execute();
 
+        /*
         if (musicService == null) Log.d("TAG", "music Service is NULL!");
         else Log.d("TAG", "music Service is NOT NULL!");
-        musicService.setMusicStatus(MusicService.PLAYING_MUSIC);
+        musicService.setMusicStatus(musicPlayerSettings.getPlaySetting());
         musicService.setRepeatStatus(musicPlayerSettings.getRepeatSetting());
         musicService.setShuffleStatus(musicPlayerSettings.getShuffleSetting());
+        */
         playBtn = findViewById(R.id.playBtn);
         nextBtn = findViewById(R.id.nextBtn);
         prevBtn = findViewById(R.id.prevBtn);
@@ -349,6 +461,16 @@ public class NewMusicPlayer extends AppCompatActivity {
             repeatBtn.setImageResource(R.drawable.repeat_one);
         }
 
+        //setting up play button
+        if(mediaController.isPlaying()) {
+            Log.d("TAG", "setting up PAUSE img on play btn...");
+            playBtn.setImageResource(R.drawable.ic_pause_filled);
+        }
+        else {
+            Log.d("TAG", "setting up PLAY img on play btn...");
+            playBtn.setImageResource(R.drawable.ic_play_filled);
+        }
+
         songTitle.setSelected(true);    //for Marquee
         handler = new Handler(Looper.getMainLooper());
     }
@@ -357,7 +479,7 @@ public class NewMusicPlayer extends AppCompatActivity {
         handler.postDelayed(new Runnable() {
             @Override
             public void run() {
-                int currPosition = (int) (musicService.getCurrentPosition() / 1000);
+                int currPosition = (int) (mediaController.getCurrentPosition() / 1000);
                 seekbar.setProgress(currPosition);
                 currDuration.setText(formatTime(currPosition));
                 handler.postDelayed(this, 1000);
@@ -365,45 +487,75 @@ public class NewMusicPlayer extends AppCompatActivity {
         }, 1000);
     }
 
-    private class SetLikeState extends AsyncTask<Void, Void, Void> {
-        @Override
-        protected Void doInBackground(Void... voids) {
-            if (runningApp.getDatabase().songDao().isSongLiked(songList.get(songPosition).getKey())) {
-                likeState = LIKED;
-                likeBtn.setImageResource(R.drawable.heart_filled);
-            } else {
-                likeState = NOT_LIKED;
-                likeBtn.setImageResource(R.drawable.heart_outline);
+    @Override
+    public void onMediaControllerAvailable() {
+        Log.d("TAG", "Media Controller Available, calling setups()");
+        mediaController = MediaPlayback.INSTANCE.getMediaController();
+        MediaPlayback.INSTANCE.getMediaController().addListener(new Player.Listener() {
+            @Override
+            public void onPlaybackStateChanged(int playbackState) {
+                Player.Listener.super.onPlaybackStateChanged(playbackState);
+                if(playbackState == Player.STATE_ENDED){
+                    updateSongPositionNext();
+                    MusicService.Companion.mediaItemBuilder(songList.get(songPosition));
+                    setUpUI(songList.get(songPosition));
+                    playMusic();
+                }
             }
-            return null;
-        }
+        });
+        findViewById(R.id.progressCardView).setVisibility(View.GONE);
+        findViewById(R.id.constLayt).setVisibility(View.VISIBLE);
+        setups();
     }
+
+//    private class SetLikeState extends AsyncTask<Void, Void, Void> {
+//        @Override
+//        protected Void doInBackground(Void... voids) {
+//            if (runningApp.getDatabase().songDao().isSongLiked(songList.get(songPosition).getKey())) {
+//                likeState = LIKED;
+//                likeBtn.setImageResource(R.drawable.heart_filled);
+//            } else {
+//                likeState = NOT_LIKED;
+//                likeBtn.setImageResource(R.drawable.heart_outline);
+//            }
+//            return null;
+//        }
+//    }
 
     private void playMusic() {
         Log.d("TAG", "Playing Music");
         playBtn.setImageResource(R.drawable.ic_pause_filled);
         musicStatus = PLAYING_MUSIC;
+        MediaPlayback.INSTANCE.setMusicStatus(MusicService.PLAYING_MUSIC);
+        mediaController.play();
+        Log.d("TAG", "Saving PLAY state...");
+        int play = MusicService.PLAYING_MUSIC;
+        int shuffle = musicPlayerSettings.getShuffleSetting();
+        int repeat = musicPlayerSettings.getRepeatSetting();
+        musicPlayerSettings.saveSettings(play, shuffle, repeat);
+        /*
         musicService.setMusicStatus(MusicService.PLAYING_MUSIC);
+        Log.d("TAG", "mediaController.play() called!");
         musicService.playMusic();
+        **/
     }
 
     private void pauseMusic() {
         Log.d("TAG", "Music Paused");
         playBtn.setImageResource(R.drawable.ic_play_filled);
         musicStatus = PAUSED_MUSIC;
+        MediaPlayback.INSTANCE.setMusicStatus(MusicService.PAUSED_MUSIC);
+        mediaController.pause();
+        Log.d("TAG", "Saving PAUSE state...");
+        int play = MusicService.PAUSED_MUSIC;
+        int shuffle = musicPlayerSettings.getShuffleSetting();
+        int repeat = musicPlayerSettings.getRepeatSetting();
+        musicPlayerSettings.saveSettings(play, shuffle, repeat);
+        /*
+        Log.d("TAG", "mediaController.pause() called!");
         musicService.setMusicStatus(MusicService.PAUSED_MUSIC);
         musicService.pauseMusic();
-    }
-
-    public void resetPlayer() {
-        musicStatus = PAUSED_MUSIC;
-        musicService.setMusicStatus(MusicService.PAUSED_MUSIC);
-        //TODO: temporary provision
-        likeState = NOT_LIKED;
-        likeBtn.setImageResource(R.drawable.heart_outline);
-        musicService.pauseMusic();
-        playBtn.setImageResource(R.drawable.ic_play_filled);
-        musicService.playerSeekTo(0);
+         **/
     }
 
     @SuppressLint("DefaultLocale")
@@ -421,13 +573,24 @@ public class NewMusicPlayer extends AppCompatActivity {
         songDuration.setText(formatTime(song.getDurationInSeconds()));
         seekbar.setMax(song.getDurationInSeconds());
         setBanner(song.getBanner(), songBanner);
-        playBtn.setImageResource(R.drawable.ic_pause_filled);
+
+        //setting up play button
+        if(mediaController.isPlaying()) {
+            Log.d("TAG", "setting up PAUSE img on play btn...");
+            playBtn.setImageResource(R.drawable.ic_pause_filled);
+        }
+        else {
+            Log.d("TAG", "setting up PLAY img on play btn...");
+            playBtn.setImageResource(R.drawable.ic_play_filled);
+        }
 
         bottomTitle.setText(song.getTitle());
         bottomArtist.setText(song.getArtist());
         Glide.with(this)
                 .load(song.getBanner())
                 .into(bottomBanner);
+
+        showAmbient(song);
     }
 
     private void setBanner(String bannerUrl, RoundedImageView roundedImageView) {
@@ -436,5 +599,26 @@ public class NewMusicPlayer extends AppCompatActivity {
                 .load(bannerUrl)
                 .centerCrop()
                 .into(roundedImageView);
+    }
+
+    private void showAmbient(Song song){
+        new Handler(Looper.getMainLooper()).postDelayed(() -> {
+            GradientDrawable gradientDrawable = new GradientDrawable(
+                    GradientDrawable.Orientation.TL_BR,
+                    new int[]{
+                            Color.parseColor(song.getStartColor()),
+                            Color.TRANSPARENT
+                    }
+            );
+            gradientDrawable.setGradientType(GradientDrawable.RADIAL_GRADIENT);
+            gradientDrawable.setGradientCenter(0.5f, 0.48f);
+            gradientDrawable.setGradientRadius(325 * getResources().getDisplayMetrics().density);
+
+            View ambientView = findViewById(R.id.ambientView);
+            ambientView.setBackground(gradientDrawable);
+            ambientView.animate()
+                    .alpha(1f)
+                    .setDuration(500);
+        }, 1000);
     }
 }

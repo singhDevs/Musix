@@ -8,7 +8,7 @@
     tools:context=".activities.PlaylistActivity"
     android:padding="0dp"
     android:background="@color/bg_primary">
-    
+
     <com.google.android.material.appbar.AppBarLayout
         android:id="@+id/appbar"
         android:layout_width="match_parent"
@@ -36,7 +36,7 @@
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
             style="@style/ToolbarStyle"
-            android:title="Musix"
+            android:title="@string/musix"
             app:layout_collapseMode="pin"/>
             <ImageView
                 android:id="@+id/banner"
@@ -49,7 +49,7 @@
 
         </com.google.android.material.appbar.CollapsingToolbarLayout>
     </com.google.android.material.appbar.AppBarLayout>
-    
+
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -101,7 +101,7 @@
 
         </androidx.constraintlayout.widget.ConstraintLayout>
     </androidx.core.widget.NestedScrollView>
-    
+
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/playBtn"
         android:layout_width="wrap_content"
@@ -112,7 +112,7 @@
         app:fabSize="normal"
         app:layout_anchor="@id/appbar"
         app:layout_anchorGravity="end|bottom"
-        android:layout_marginRight="20dp"/>
+        android:layout_marginEnd="20dp"/>
 
     <ImageView
         android:id="@+id/backBtn"
@@ -125,31 +125,4 @@
         android:layout_marginTop="10dp"
         app:tint="@color/black"/>
 
-  </androidx.coordinatorlayout.widget.CoordinatorLayout>
-
-
-<!--<com.google.android.material.floatingactionbutton.FloatingActionButton-->
-<!--android:id="@+id/playBtn"-->
-<!--android:layout_width="70dp"-->
-<!--android:layout_height="70dp"-->
-<!--android:background="#00FFFF"-->
-<!--app:layout_constraintTop_toTopOf="@id/playlistCard"-->
-<!--app:layout_constraintBottom_toTopOf="@id/playlistCard"-->
-<!--app:layout_anchor="end|bottom"-->
-<!--android:layout_marginStart="50dp"/>-->
-
-
-<!--<com.google.android.material.card.MaterialCardView-->
-<!--android:id="@+id/playlistCard"-->
-<!--android:layout_width="match_parent"-->
-<!--android:layout_height="wrap_content"-->
-<!--android:backgroundTint="?attr/colorPrimary"-->
-<!--android:layout_marginBottom="-10dp"-->
-<!--app:cardCornerRadius="0dp"-->
-<!--android:padding="10dp"-->
-<!--app:layout_constraintBottom_toBottomOf="parent"-->
-<!--app:layout_constraintStart_toStartOf="parent"-->
-<!--app:layout_constraintEnd_toEndOf="parent">-->
-
-
-<!--</com.google.android.material.card.MaterialCardView>-->
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

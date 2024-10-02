@@ -1,9 +1,8 @@
 plugins {
-    id("com.android.application")
     id("com.google.gms.google-services")
-    id("org.jetbrains.kotlin.android")
-    id("kotlin-android")
     id("kotlin-kapt")
+    alias(libs.plugins.android.application)
+    alias(libs.plugins.jetbrains.kotlin.android)
 }
 
 android {
@@ -12,12 +11,15 @@ android {
 
     defaultConfig {
         applicationId = "com.example.musix"
-        minSdk = 27
-        targetSdk = 33
+        minSdk = 28
+        targetSdk = 34
         versionCode = 1
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        vectorDrawables {
+            useSupportLibrary = true
+        }
     }
 
     buildTypes {
@@ -30,43 +32,70 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
     }
-    kotlinOptions{
-        jvmTarget = "17"
+    kotlinOptions {
+        jvmTarget = "1.8"
     }
-
-    buildFeatures{
+    buildFeatures {
         viewBinding = true
+//        compose = true
     }
+//    composeOptions {
+//        kotlinCompilerExtensionVersion = "1.5.1"
+//    }
 }
 
 dependencies {
-    implementation("androidx.appcompat:appcompat:1.6.1")
-    implementation("com.google.android.material:material:1.11.0")
-    implementation("androidx.constraintlayout:constraintlayout:2.1.4")
-    implementation(platform("com.google.firebase:firebase-bom:32.7.0"))
-    implementation("com.google.firebase:firebase-database:20.3.0")
-    implementation("com.google.firebase:firebase-storage:20.3.0")
-    implementation("com.google.firebase:firebase-auth:22.3.0")
-    implementation("com.google.android.gms:play-services-auth:20.7.0")
-    implementation("androidx.core:core-ktx:1.12.0")
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.4.0")
-    testImplementation("junit:junit:4.13.2")
-    androidTestImplementation("androidx.test.ext:junit:1.1.5")
-    androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
-    implementation("com.makeramen:roundedimageview:2.3.0")
-    implementation("com.google.android.exoplayer:exoplayer:2.15.0")
-    implementation("com.github.bumptech.glide:glide:4.14.2")
+    implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.lifecycle.runtime.ktx)
+//    implementation(libs.androidx.ui)
+//    implementation(libs.androidx.ui.graphics)
+//    implementation(libs.androidx.ui.tooling.preview)
+//    implementation(libs.androidx.material3)
+    implementation(libs.androidx.activity)
+    testImplementation(libs.junit)
+    androidTestImplementation(libs.androidx.junit)
+    androidTestImplementation(libs.androidx.espresso.core)
+//    androidTestImplementation(libs.androidx.ui.test.junit4)
+//    debugImplementation(libs.androidx.ui.tooling)
+//    debugImplementation(libs.androidx.ui.test.manifest)
 
-    implementation("androidx.media:media:1.1.0")
-    implementation("org.jetbrains.kotlin:kotlin-stdlib:1.9.22")
-    implementation("com.github.ismaeldivita:chip-navigation-bar:1.4.0")
+    implementation(libs.androidx.appcompat)
+    implementation(libs.material)
+    implementation(libs.androidx.constraintlayout)
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.database)
+    implementation(libs.firebase.storage)
+    implementation(libs.firebase.auth)
+    implementation(libs.play.services.auth)
+//    implementation(libs.androidx.activity.ktx)
+    implementation(libs.roundedimageview)
+    implementation(libs.exoplayer)
+    implementation(libs.glide)
+
+    // For media playback using ExoPlayer
+    implementation(libs.androidx.media3.exoplayer)
+    implementation(libs.androidx.media3.exoplayer.dash)
+    implementation(libs.androidx.media3.ui)
+    implementation(libs.androidx.media3.session)
+
+
+    implementation(libs.chip.navigation.bar)
+    implementation(libs.shimmer)
+    implementation(libs.androidx.swiperefreshlayout)
 
     val room_version = "2.6.1"
-    implementation("androidx.room:room-runtime:$room_version")
-    annotationProcessor("androidx.room:room-compiler:$room_version")
-    implementation("androidx.room:room-ktx:$room_version")
+    implementation(libs.androidx.room.runtime)
+    annotationProcessor(libs.androidx.room.compiler)
+    implementation(libs.androidx.room.ktx)
     kapt("androidx.room:room-compiler:$room_version")
+
+//    implementation(libs.androidx.activity.compose)
+//    implementation(platform(libs.androidx.compose.bom))
+//    androidTestImplementation(platform(libs.androidx.compose.bom))
+
+    // ViewPager 2
+    implementation(libs.androidx.viewpager2)
 }

@@ -1,6 +1,5 @@
 package com.example.musix.activities;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.cardview.widget.CardView;
 import androidx.constraintlayout.widget.ConstraintLayout;
@@ -20,25 +19,27 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.FrameLayout;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
+import com.example.musix.MediaPlayback;
 import com.example.musix.R;
 import com.example.musix.application.RunningApp;
 import com.example.musix.databinding.ActivityMainBinding;
 import com.example.musix.fragments.HomeFragment;
 import com.example.musix.fragments.FilesFragment;
+//import com.example.musix.fragments.SearchComposeFragment;
+//import com.example.musix.fragments.SearchFragment;
 import com.example.musix.fragments.SearchFragment;
 import com.example.musix.handlers.FirebaseHandler;
 import com.example.musix.models.Playlist;
 import com.example.musix.models.Song;
 import com.example.musix.services.MusicService;
-import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.example.musix.settings.MusicPlayerSettings;
 import com.google.android.material.button.MaterialButton;
 import com.google.firebase.auth.FirebaseAuth;
 import com.ismaeldivita.chipnavigation.ChipNavigationBar;
@@ -52,6 +53,7 @@ public class MainActivity extends AppCompatActivity {
     private int currentFragmentId = R.id.fragment_container;
     private boolean isBackFromOtherActivity;
     private ChipNavigationBar navigationBar;
+    private MusicPlayerSettings musicPlayerSettings;
     boolean loadedFragment = false;
     ImageView songImgBanner, likeBtn, playBtn;
     TextView songTxtTitle, songTxtArtist;
@@ -88,20 +90,19 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        requestWindowFeature( Window.FEATURE_NO_TITLE );
+        getWindow().setFlags( WindowManager.LayoutParams.FLAG_FULLSCREEN,
+                WindowManager.LayoutParams.FLAG_FULLSCREEN );
+
         setContentView(R.layout.activity_main);
 
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
-        runningApp = (RunningApp) getApplication();
-        if (runningApp != null) {
-            Log.d("TAG", "inside MainActivity, initializing music service in Music Player & Service Connection");
-            musicService = runningApp.getMusicService();
-            serviceConnection = runningApp.getServiceConnection();
-        } else {
-            Log.d("TAG", "inside Main Activity, Running App is NULL");
-        }
+        getMusicService();
 
+        musicPlayerSettings = new MusicPlayerSettings(getApplicationContext());
         IntentFilter filter = new IntentFilter(MusicService.PLAYER_PLAYING);
         LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver, filter);
 
@@ -124,8 +125,8 @@ public class MainActivity extends AppCompatActivity {
         songTxtArtist.setSelected(true);
 
         Log.d("songBar", "2.songBar visi: " + songBar.getVisibility());
-        if (musicService != null && musicService.getMusicStatus() != MusicService.NOT_STARTED) {
-            Log.d("songBar", "2.music Status: " + musicService.getMusicStatus());
+        if (musicService != null && MediaPlayback.INSTANCE.getMusicStatus() != MusicService.NOT_STARTED) {
+            Log.d("songBar", "2.music Status: " + MediaPlayback.INSTANCE.getMusicStatus());
             setUpSongBar();
         }
 
@@ -157,16 +158,30 @@ public class MainActivity extends AppCompatActivity {
         });
 
         playBtn.setOnClickListener(v -> {
+            Log.d("TAG", "playButton clicked!");
             if(musicService!= null) {
-                if (musicService.getMusicStatus() == MusicService.PLAYING_MUSIC) {
-                    musicService.setMusicStatus(MusicService.PAUSED_MUSIC);
-                    musicService.pauseMusic();
+                if (MediaPlayback.INSTANCE.getMusicStatus() == MusicService.PLAYING_MUSIC) {
+                    MediaPlayback.INSTANCE.setMusicStatus(MusicService.PAUSED_MUSIC);
+                    Log.d("TAG", "Found PLAYING, setting PAUSED state...");
+                    int play = MusicService.PAUSED_MUSIC;
+                    int shuffle = musicPlayerSettings.getShuffleSetting();
+                    int repeat = musicPlayerSettings.getRepeatSetting();
+                    musicPlayerSettings.saveSettings(play, shuffle, repeat);
+//                    musicService.pauseMusic();
                     playBtn.setImageResource(R.drawable.ic_play_arrow);
                 } else {
-                    musicService.setMusicStatus(MusicService.PLAYING_MUSIC);
-                    musicService.playMusic();
+                    MediaPlayback.INSTANCE.setMusicStatus(MusicService.PLAYING_MUSIC);
+                    Log.d("TAG", "Found PAUSED, setting PLAY state...");
+                    int play = MusicService.PLAYING_MUSIC;
+                    int shuffle = musicPlayerSettings.getShuffleSetting();
+                    int repeat = musicPlayerSettings.getRepeatSetting();
+                    musicPlayerSettings.saveSettings(play, shuffle, repeat);
+//                    musicService.playMusic();
                     playBtn.setImageResource(R.drawable.ic_pause);
                 }
+            }
+            else{
+                Log.d("TAG", "music service is null");
             }
         });
 
@@ -213,6 +228,17 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private void getMusicService() {
+        runningApp = (RunningApp) getApplication();
+        if (runningApp != null) {
+            Log.d("TAG", "inside MainActivity, initializing music service in Music Player & Service Connection");
+            musicService = runningApp.getMusicService();
+//            serviceConnection = runningApp.getServiceConnection();
+        } else {
+            Log.d("TAG", "inside Main Activity, Running App is NULL");
+        }
+    }
+
     private void setUpSongBar() {
         songBar.setVisibility(View.VISIBLE);
         new SetLikeState().execute();
@@ -225,7 +251,7 @@ public class MainActivity extends AppCompatActivity {
                 .load(songBanner)
                 .into(songImgBanner);
 
-        if (musicService != null && musicService.getMusicStatus() == MusicService.PLAYING_MUSIC)
+        if (musicService != null && MediaPlayback.INSTANCE.getMusicStatus() == MusicService.PLAYING_MUSIC)
             playBtn.setImageResource(R.drawable.ic_pause);
         else
             playBtn.setImageResource(R.drawable.ic_play_arrow);
@@ -249,25 +275,6 @@ public class MainActivity extends AppCompatActivity {
             }
         });
     }
-
-    private final BottomNavigationView.OnNavigationItemSelectedListener navigationItemSelectedListener =
-            new BottomNavigationView.OnNavigationItemSelectedListener() {
-                @Override
-                public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-                    int itemId = item.getItemId();
-                    FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-
-                    if (itemId == R.id.nav_home) {
-                        fragmentTransaction.replace(currentFragmentId, new HomeFragment());
-                    } else if (itemId == R.id.nav_search) {
-                        fragmentTransaction.replace(currentFragmentId, new SearchFragment());
-                    } else if (itemId == R.id.nav_files) {
-                        fragmentTransaction.replace(currentFragmentId, new FilesFragment());
-                    }
-                    fragmentTransaction.commit();
-                    return true;
-                }
-            };
 
     private class SetLikeState extends AsyncTask<Void, Void, Void> {
         @Override
@@ -299,8 +306,49 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
+    protected void onResume() {
+        Log.d("TAG", "inside onResume...");
+        super.onResume();
+
+        if(musicService == null){
+            Log.d("TAG", "music service is null");
+            Log.d("TAG", "getting music service...");
+            getMusicService();
+
+            if(musicService != null){
+                if (MediaPlayback.INSTANCE.getMusicStatus() == MusicService.PLAYING_MUSIC) {
+                    MediaPlayback.INSTANCE.setMusicStatus(MusicService.PAUSED_MUSIC);
+                    Log.d("TAG", "Found PLAYING, setting PAUSED state...");
+                    int play = MusicService.PAUSED_MUSIC;
+                    int shuffle = musicPlayerSettings.getShuffleSetting();
+                    int repeat = musicPlayerSettings.getRepeatSetting();
+                    musicPlayerSettings.saveSettings(play, shuffle, repeat);
+//                    musicService.pauseMusic();
+                    playBtn.setImageResource(R.drawable.ic_play_arrow);
+                }
+                else {
+                    MediaPlayback.INSTANCE.setMusicStatus(MusicService.PLAYING_MUSIC);
+                    Log.d("TAG", "Found PAUSED, setting PLAY state...");
+                    int play = MusicService.PLAYING_MUSIC;
+                    int shuffle = musicPlayerSettings.getShuffleSetting();
+                    int repeat = musicPlayerSettings.getRepeatSetting();
+                    musicPlayerSettings.saveSettings(play, shuffle, repeat);
+//                    musicService.playMusic();
+                    playBtn.setImageResource(R.drawable.ic_pause);
+                }
+            }
+        }
+        else{
+            Log.d("TAG", "music service is not null");
+        }
+    }
+
+    @Override
     protected void onDestroy() {
+        Log.d("TAG", "onDestroy called.");
         super.onDestroy();
-        unregisterReceiver(broadcastReceiver);
+        if (broadcastReceiver != null) {
+            LocalBroadcastManager.getInstance(this).unregisterReceiver(broadcastReceiver);
+        }
     }
 }

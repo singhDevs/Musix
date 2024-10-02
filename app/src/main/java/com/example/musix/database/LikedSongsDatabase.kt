@@ -7,7 +7,7 @@ import androidx.room.RoomDatabase
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.example.musix.models.Song
 
-@Database(entities = [Song::class], version = 1, exportSchema = false)
+@Database(entities = [Song::class], version = 2, exportSchema = false)
 abstract class LikedSongsDatabase: RoomDatabase() {
     abstract fun songDao(): LikedSongDAO
     companion object{

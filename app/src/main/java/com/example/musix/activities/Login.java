@@ -11,6 +11,8 @@ import android.os.Bundle;
 import android.text.method.PasswordTransformationMethod;
 import android.util.Log;
 import android.view.View;
+import android.view.Window;
+import android.view.WindowManager;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.CompoundButton;
@@ -62,10 +64,15 @@ public class Login extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        requestWindowFeature( Window.FEATURE_NO_TITLE );
+        getWindow().setFlags( WindowManager.LayoutParams.FLAG_FULLSCREEN,
+                WindowManager.LayoutParams.FLAG_FULLSCREEN );
+
         setContentView(R.layout.activity_login);
 
         videoView = findViewById(R.id.videoView);
-        String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.video; // Replace with your actual video file
+        String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.video;
 
         // Parse the URI and set it to the VideoView
         Uri uri = Uri.parse(videoPath);
@@ -80,7 +87,7 @@ public class Login extends AppCompatActivity {
         loginCard.startAnimation(slideUp);
 
         // [START config_sign in]
-        //Configuring Google Sign In
+        // Configuring Google Sign In
         GoogleSignInOptions gso = GoogleSignInHelper.getSignInOptions(this);
         mGoogleSignInClient = GoogleSignIn.getClient(this, gso);
         //[END config_sign in]
